@@ -1,0 +1,46 @@
+---
+import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { Github } from 'lucide-react';
+
+const { pathname } = Astro.url;
+---
+
+<header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  <div class="container flex h-16 items-center justify-between">
+    <div class="flex items-center gap-8">
+      <a href="/" class="flex items-center space-x-2">
+        <span class="font-bold text-xl tracking-tight">tdepend</span>
+      </a>
+      <nav class="hidden md:flex items-center gap-6">
+        <a
+          href="/docs"
+          class:list={[
+            "text-sm font-medium transition-colors hover:text-primary",
+            pathname?.startsWith('/docs') ? "text-foreground" : "text-muted-foreground"
+          ]}
+        >
+          Docs
+        </a>
+        <a
+          href="/blog"
+          class:list={[
+            "text-sm font-medium transition-colors hover:text-primary",
+            pathname?.startsWith('/blog') ? "text-foreground" : "text-muted-foreground"
+          ]}
+        >
+          Blog
+        </a>
+      </nav>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="https://github.com/yourusername/tdepend" target="_blank" rel="noopener noreferrer">
+        <Button variant="ghost" size="icon" className="w-9 h-9">
+          <Github className="h-4 w-4" />
+          <span class="sr-only">GitHub</span>
+        </Button>
+      </a>
+      <ThemeToggle client:load />
+    </div>
+  </div>
+</header>

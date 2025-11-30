@@ -1,0 +1,78 @@
+---
+import '@/styles/globals.css';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+
+interface Props {
+  frontmatter?: {
+    title?: string;
+    description?: string;
+    date?: string;
+    author?: string;
+  };
+}
+
+const { frontmatter } = Astro.props;
+const title = frontmatter?.title ? `${frontmatter.title} - Blog - tdepend` : 'Blog - tdepend';
+const description = frontmatter?.description || 'tdepend blog post';
+---
+
+<!DOCTYPE html>
+<html lang="en" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline>
+      const theme = localStorage.getItem('theme') || 'light';
+      document.documentElement.classList.add(theme);
+    </script>
+  </head>
+  <body class="min-h-screen bg-background font-sans antialiased">
+    <div class="relative flex min-h-screen flex-col">
+      <Header />
+      <main class="flex-1">
+        <div class="container py-12">
+          <div class="mx-auto max-w-3xl">
+            <a href="/blog">
+              <Button variant="ghost" className="gap-2 mb-8">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Blog
+              </Button>
+            </a>
+            <div class="space-y-4 mb-8">
+              <h1 class="text-4xl md:text-5xl font-bold tracking-tight">{frontmatter?.title}</h1>
+              <div class="flex items-center gap-4 text-muted-foreground">
+                {frontmatter?.date && (
+                  <time datetime={frontmatter.date}>
+                    {new Date(frontmatter.date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </time>
+                )}
+                {frontmatter?.author && (
+                  <>
+                    <span>•</span>
+                    <span>{frontmatter.author}</span>
+                  </>
+                )}
+              </div>
+            </div>
+            <Separator className="mb-8" />
+            <article class="prose prose-neutral dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-headings:font-bold prose-h2:text-3xl prose-h3:text-2xl prose-pre:bg-muted prose-pre:border prose-img:rounded-lg">
+              <slot />
+            </article>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  </body>
+</html>

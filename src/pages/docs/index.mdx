@@ -1,0 +1,124 @@
+---
+layout: ../../layouts/DocLayout.astro
+title: Getting Started
+description: Learn how to use tdepend to analyze your TypeScript project architecture
+---
+
+# Getting Started with tdepend
+
+Welcome to tdepend, a powerful tool for analyzing architectural fitness in TypeScript projects. This guide will help you get started quickly.
+
+## Installation
+
+Install tdepend as a development dependency in your project:
+
+```bash
+npm install -D tdepend
+```
+
+Or using your preferred package manager:
+
+```bash
+yarn add -D tdepend
+pnpm add -D tdepend
+```
+
+## Quick Start
+
+Once installed, you can run tdepend on your project:
+
+```bash
+npx tdepend analyze
+```
+
+This will analyze your TypeScript project and output architectural metrics including:
+
+- **Afferent Coupling (Ca)**: Number of modules that depend on this module
+- **Efferent Coupling (Ce)**: Number of modules this module depends on
+- **Instability (I)**: Ratio of efferent to total coupling
+- **Abstractness (A)**: Ratio of abstract types to total types
+- **Distance (D)**: Distance from the main sequence
+
+## Configuration
+
+Create a `tdepend.config.js` file in your project root:
+
+```javascript
+module.exports = {
+  rootDir: './src',
+  exclude: ['**/*.test.ts', '**/*.spec.ts'],
+  thresholds: {
+    instability: 0.5,
+    distance: 0.3
+  }
+};
+```
+
+### Configuration Options
+
+- `rootDir`: The root directory to analyze (default: `./src`)
+- `exclude`: Patterns for files to exclude from analysis
+- `thresholds`: Quality thresholds for fitness functions
+- `output`: Output format (`json`, `markdown`, or `console`)
+
+## Understanding Metrics
+
+### Instability (I)
+
+Instability measures how susceptible a module is to change:
+
+```
+I = Ce / (Ca + Ce)
+```
+
+- **I = 0**: Maximally stable (many dependents, few dependencies)
+- **I = 1**: Maximally unstable (few dependents, many dependencies)
+
+### Abstractness (A)
+
+Abstractness measures the ratio of abstract types to concrete types:
+
+```
+A = Abstract Types / Total Types
+```
+
+### Distance from Main Sequence (D)
+
+The main sequence represents the ideal balance between stability and abstractness:
+
+```
+D = |A + I - 1|
+```
+
+A low distance value indicates a healthy balance.
+
+## Detecting Cycles
+
+tdepend uses Tarjan's algorithm to detect strongly connected components (cycles):
+
+```bash
+npx tdepend cycles
+```
+
+This will output any circular dependencies in your codebase, which should be eliminated for maintainable architecture.
+
+## Example Output
+
+```
+Module: src/services/UserService.ts
+  Ca (Afferent): 5
+  Ce (Efferent): 3
+  Instability: 0.375
+  Abstractness: 0.2
+  Distance: 0.425
+  Status: ✓ Healthy
+```
+
+## Next Steps
+
+- Configure custom fitness functions
+- Set up quality gates in CI/CD
+- Integrate with your workflow
+- Explore advanced metrics
+
+For more detailed documentation, check out the [API Reference](/docs/api) and [Configuration Guide](/docs/configuration).

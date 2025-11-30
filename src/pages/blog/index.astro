@@ -1,0 +1,80 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Calendar } from 'lucide-react';
+
+const posts = [
+  {
+    slug: 'example-post',
+    title: 'Introducing tdepend: Architectural Fitness for TypeScript',
+    excerpt: 'Learn how tdepend helps you maintain clean architecture and identify technical debt in your TypeScript projects.',
+    date: '2024-01-15',
+    author: 'The tdepend Team'
+  },
+  {
+    slug: 'understanding-metrics',
+    title: 'Understanding Architectural Metrics',
+    excerpt: 'A deep dive into coupling, cohesion, and how to use metrics to guide your architectural decisions.',
+    date: '2024-01-10',
+    author: 'The tdepend Team'
+  },
+  {
+    slug: 'detecting-cycles',
+    title: 'Detecting and Breaking Circular Dependencies',
+    excerpt: 'Circular dependencies are a common problem in large codebases. Learn how to identify and resolve them.',
+    date: '2024-01-05',
+    author: 'The tdepend Team'
+  }
+];
+---
+
+<BaseLayout title="Blog - tdepend" description="Latest news and articles about architectural fitness analysis">
+  <div class="container py-12">
+    <div class="mx-auto max-w-4xl">
+      <div class="space-y-4 mb-12">
+        <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Blog</h1>
+        <p class="text-xl text-muted-foreground">
+          Insights on architectural fitness, clean code, and best practices
+        </p>
+      </div>
+
+      <div class="grid gap-6">
+        {posts.map((post) => (
+          <Card className="transition-all hover:shadow-lg hover:border-primary/50">
+            <CardHeader>
+              <div class="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                <Calendar className="h-4 w-4" />
+                <time datetime={post.date}>
+                  {new Date(post.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </time>
+                <span>•</span>
+                <span>{post.author}</span>
+              </div>
+              <CardTitle className="text-2xl">
+                <a href={`/blog/${post.slug}`} class="hover:text-primary transition-colors">
+                  {post.title}
+                </a>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <CardDescription className="text-base leading-relaxed">
+                {post.excerpt}
+              </CardDescription>
+              <a href={`/blog/${post.slug}`}>
+                <Button variant="ghost" className="gap-2 group">
+                  Read more
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </a>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  </div>
+</BaseLayout>

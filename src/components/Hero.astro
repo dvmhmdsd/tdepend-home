@@ -1,0 +1,34 @@
+---
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Github } from 'lucide-react';
+---
+
+<section class="relative py-20 md:py-32 overflow-hidden">
+  <div class="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+  <div class="container">
+    <div class="mx-auto max-w-4xl text-center space-y-8">
+      <div class="space-y-4">
+        <h1 class="text-4xl font-bold tracking-tight sm:text-6xl md:text-7xl bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+          Architectural Fitness Analysis for TypeScript
+        </h1>
+        <p class="mx-auto max-w-2xl text-lg md:text-xl text-muted-foreground leading-relaxed">
+          A modern tool for analyzing coupling, detecting cycles, and computing architecture fitness metrics like instability, abstractness, and distance from the main sequence.
+        </p>
+      </div>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="/docs">
+          <Button size="lg" className="gap-2">
+            Get Started
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </a>
+        <a href="https://github.com/yourusername/tdepend" target="_blank" rel="noopener noreferrer">
+          <Button size="lg" variant="outline" className="gap-2">
+            <Github className="h-4 w-4" />
+            GitHub
+          </Button>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
