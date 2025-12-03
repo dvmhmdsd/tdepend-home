@@ -1,11 +1,21 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Network, GitBranch, Activity, Settings } from 'lucide-react';
 
-export function FeatureCard({ icon: Icon, title, description }) {
+const iconMap = {
+  Network,
+  GitBranch,
+  Activity,
+  Settings,
+};
+
+export function FeatureCard({ icon, title, description }) {
+  const Icon = iconMap[icon];
+  
   return (
     <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50">
       <CardHeader>
         <div className="mb-4 p-3 rounded-lg bg-primary/10 w-fit">
-          <Icon className="h-6 w-6 text-primary" />
+          {Icon && <Icon className="h-6 w-6 text-primary" />}
         </div>
         <CardTitle className="text-xl">{title}</CardTitle>
       </CardHeader>

@@ -3,26 +3,25 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import Hero from '@/components/Hero.astro';
 import { InstallSnippet } from '@/components/InstallSnippet';
 import { FeatureCard } from '@/components/FeatureCard';
-import { Network, GitBranch, Activity, Settings } from 'lucide-react';
 
 const features = [
   {
-    icon: Network,
+    icon: 'Network',
     title: 'Dependency Analysis',
     description: 'Analyze coupling between modules and components. Understand how your codebase is structured and identify tight coupling that may need refactoring.'
   },
   {
-    icon: GitBranch,
+    icon: 'GitBranch',
     title: 'Cycle Detection',
     description: 'Detect circular dependencies using Tarjan\'s strongly connected components algorithm. Find and eliminate problematic cycles in your architecture.'
   },
   {
-    icon: Activity,
+    icon: 'Activity',
     title: 'Architectural Metrics',
     description: 'Compute key fitness metrics including Afferent Coupling (Ca), Efferent Coupling (Ce), Instability (I), Abstractness (A), and Distance from the main sequence.'
   },
   {
-    icon: Settings,
+    icon: 'Settings',
     title: 'Configurable Fitness Functions',
     description: 'Define custom fitness functions and thresholds to enforce architectural rules. Set up quality gates that align with your team\'s standards.'
   }
@@ -33,8 +32,7 @@ const features = [
   <Hero />
 
   <section class="py-16 bg-muted/30">
-    <div class="container">
-      <div class="mx-auto max-w-3xl text-center space-y-4 mb-12">
+      <div class="mx-auto text-center space-y-4 mb-12">
         <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
           Quick Installation
         </h2>
@@ -43,12 +41,10 @@ const features = [
         </p>
       </div>
       <InstallSnippet client:load />
-    </div>
   </section>
 
   <section class="py-20">
-    <div class="container">
-      <div class="mx-auto max-w-3xl text-center space-y-4 mb-16">
+      <div class="mx-auto text-center space-y-4 mb-16">
         <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
           Powerful Features
         </h2>
@@ -66,12 +62,10 @@ const features = [
           />
         ))}
       </div>
-    </div>
   </section>
 
   <section class="py-20 bg-muted/30">
-    <div class="container">
-      <div class="mx-auto max-w-3xl text-center space-y-4 mb-16">
+      <div class="mx-auto text-center space-y-4 mb-16">
         <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
           Featured from the Blog
         </h2>
@@ -142,12 +136,10 @@ const features = [
           </button>
         </a>
       </div>
-    </div>
   </section>
 
   <section class="py-20">
-    <div class="container">
-      <div class="mx-auto max-w-3xl text-center space-y-6">
+      <div class="mx-auto text-center space-y-6">
         <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
           Ready to improve your architecture?
         </h2>
@@ -160,13 +152,12 @@ const features = [
               Get Started
             </button>
           </a>
-          <a href="https://github.com/yourusername/tdepend" target="_blank" rel="noopener noreferrer">
+          <a href="https://github.com/dvmhmdsd/tdepend" target="_blank" rel="noopener noreferrer">
             <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-8">
               View on GitHub
             </button>
           </a>
         </div>
       </div>
-    </div>
   </section>
 </BaseLayout>
