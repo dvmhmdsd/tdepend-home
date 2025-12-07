@@ -14,6 +14,15 @@ const { pathname } = Astro.url;
       </a>
       <nav class="hidden md:flex items-center gap-6">
         <a
+          href="/concepts"
+          class:list={[
+            "text-sm font-medium transition-colors hover:text-primary",
+            pathname?.startsWith('/concepts') ? "text-foreground" : "text-muted-foreground"
+          ]}
+        >
+          Concepts
+        </a>
+        <a
           href="/docs"
           class:list={[
             "text-sm font-medium transition-colors hover:text-primary",
