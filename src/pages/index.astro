@@ -138,6 +138,154 @@ const features = [
       </div>
   </section>
 
+  <section id="concepts" class="py-20">
+    <div class="container">
+      <div class="mx-auto max-w-4xl">
+        <div class="text-center space-y-4 mb-16">
+          <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Concepts</h2>
+          <p class="text-lg text-muted-foreground">
+            Learn the core architectural concepts that power tdepend
+          </p>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-12">
+          <div class="flex-1">
+            <div class="space-y-12">
+              <div id="fitness-functions" class="scroll-mt-20 space-y-4">
+                <h3 class="text-2xl font-bold">Fitness Functions</h3>
+                <div class="text-muted-foreground space-y-3 leading-relaxed">
+                  <p>
+                    Fitness functions are automated checks that ensure your architecture stays aligned with your intended design over time.
+                    They encode architectural rules as measurable, testable metrics.
+                  </p>
+                  <p>
+                    In tdepend, metrics like <em>distance</em>, <em>cyclic dependencies</em>, <em>abstractness</em>, and <em>coupling</em> can all be used as fitness
+                    functions inside CI to prevent architectural drift.
+                  </p>
+                </div>
+              </div>
+
+              <div class="border-t"></div>
+
+              <div id="distance" class="scroll-mt-20 space-y-4">
+                <h3 class="text-2xl font-bold">Distance Metric</h3>
+                <div class="text-muted-foreground space-y-3 leading-relaxed">
+                  <p>
+                    Distance measures how far a component is from the ideal balance between abstractness and stability.
+                  </p>
+                  <p>
+                    A perfect component has a distance of 0.
+                    A component drifting too far from the main sequence is flagged as a design smell.
+                  </p>
+                  <p class="font-mono text-sm bg-muted p-3 rounded">
+                    Distance = | Abstractness + Instability - 1 |
+                  </p>
+                </div>
+              </div>
+
+              <div class="border-t"></div>
+
+              <div id="abstractness" class="scroll-mt-20 space-y-4">
+                <h3 class="text-2xl font-bold">Abstractness</h3>
+                <div class="text-muted-foreground space-y-3 leading-relaxed">
+                  <p>
+                    Abstractness describes how many of a component's elements are abstractions (interfaces, abstract classes) versus concrete implementations.
+                  </p>
+                  <p class="font-mono text-sm bg-muted p-3 rounded">
+                    Abstractness = Number of abstract types / Total number of types
+                  </p>
+                  <p>
+                    High abstractness means the component defines contracts rather than implementations.
+                  </p>
+                </div>
+              </div>
+
+              <div class="border-t"></div>
+
+              <div id="coupling" class="scroll-mt-20 space-y-4">
+                <h3 class="text-2xl font-bold">Coupling (Afferent & Efferent)</h3>
+                <div class="text-muted-foreground space-y-3 leading-relaxed">
+                  <p>
+                    Coupling measures how much a component depends on others (Ce) and how many depend on it (Ca).
+                  </p>
+                  <ul class="space-y-2 ml-4">
+                    <li>• <strong>Afferent Coupling (Ca):</strong> incoming dependencies</li>
+                    <li>• <strong>Efferent Coupling (Ce):</strong> outgoing dependencies</li>
+                  </ul>
+                  <p class="font-mono text-sm bg-muted p-3 rounded">
+                    Instability = Ce / (Ca + Ce)
+                  </p>
+                  <p>
+                    These values help determine how stable or volatile a module is.
+                  </p>
+                </div>
+              </div>
+
+              <div class="border-t"></div>
+
+              <div id="tarjan" class="scroll-mt-20 space-y-4">
+                <h3 class="text-2xl font-bold">Tarjan's SCC Algorithm</h3>
+                <div class="text-muted-foreground space-y-3 leading-relaxed">
+                  <p>
+                    Tarjan's algorithm detects strongly connected components (SCCs) in a directed graph.
+                  </p>
+                  <p>
+                    In tdepend, SCCs correspond to <em>cyclic dependencies</em> between modules or namespaces.
+                    Any SCC with more than one node is treated as a cycle that should be reviewed or refactored.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hidden lg:block lg:sticky lg:top-24 lg:h-fit">
+            <div class="rounded-lg border bg-muted/50 p-4 space-y-2">
+              <div class="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">On this page</div>
+              <nav class="space-y-1">
+                <a href="#fitness-functions" class="block text-sm text-muted-foreground hover:text-primary transition-colors py-1.5 px-2 rounded hover:bg-muted">
+                  Fitness Functions
+                </a>
+                <a href="#distance" class="block text-sm text-muted-foreground hover:text-primary transition-colors py-1.5 px-2 rounded hover:bg-muted">
+                  Distance Metric
+                </a>
+                <a href="#abstractness" class="block text-sm text-muted-foreground hover:text-primary transition-colors py-1.5 px-2 rounded hover:bg-muted">
+                  Abstractness
+                </a>
+                <a href="#coupling" class="block text-sm text-muted-foreground hover:text-primary transition-colors py-1.5 px-2 rounded hover:bg-muted">
+                  Coupling
+                </a>
+                <a href="#tarjan" class="block text-sm text-muted-foreground hover:text-primary transition-colors py-1.5 px-2 rounded hover:bg-muted">
+                  Tarjan SCC
+                </a>
+              </nav>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:hidden mt-12 pt-8 border-t">
+          <div class="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">Quick links</div>
+          <div class="flex flex-wrap gap-2">
+            <a href="#fitness-functions" class="text-xs px-3 py-1.5 rounded-full border bg-muted/50 text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+              Fitness Functions
+            </a>
+            <a href="#distance" class="text-xs px-3 py-1.5 rounded-full border bg-muted/50 text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+              Distance
+            </a>
+            <a href="#abstractness" class="text-xs px-3 py-1.5 rounded-full border bg-muted/50 text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+              Abstractness
+            </a>
+            <a href="#coupling" class="text-xs px-3 py-1.5 rounded-full border bg-muted/50 text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+              Coupling
+            </a>
+            <a href="#tarjan" class="text-xs px-3 py-1.5 rounded-full border bg-muted/50 text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+              Tarjan SCC
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="py-20">
       <div class="mx-auto text-center space-y-6">
         <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
