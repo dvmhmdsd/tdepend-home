@@ -1,0 +1,156 @@
+---
+layout: ../../layouts/BlogPostLayout.astro
+title: Introducing tdepend - Architectural Fitness for TypeScript
+description: A JDepend-inspired dependency analysis tool for TypeScript that helps you maintain clean architecture with automated metrics and quality gates
+date: 2025-12-10
+author: Mohamed Saad
+---
+
+Large TypeScript codebases inevitably accumulate architectural debt. As teams grow and features are added, dependencies become tangled, circular references emerge, and the overall structure becomes increasingly difficult to maintain and understand.
+
+**tdepend** is a JDepend-inspired dependency analysis tool designed specifically for the TypeScript ecosystem to help you monitor and maintain architectural health.
+
+## Why Architectural Analysis Matters
+
+As your TypeScript project grows, several critical issues commonly emerge:
+
+- **Tight Coupling**: Modules become overly interdependent, making changes risky
+- **Circular Dependencies**: Components reference each other in cycles, creating fragile designs
+- **Poor Abstraction**: Code becomes concrete and difficult to extend
+- **Hidden Complexity**: Dependencies are invisible until they cause problems
+
+Traditional code reviews and linting tools catch syntax and style issues but often miss these deeper architectural problems that impact long-term maintainability.
+
+## What tdepend Provides
+
+tdepend offers comprehensive architectural metrics inspired by Robert C. Martin's work on software architecture:
+
+### Core Architectural Metrics
+
+- **Ca (Afferent Coupling)**: How many modules depend on this module
+- **Ce (Efferent Coupling)**: How many modules this module depends on  
+- **Abstractness**: Ratio of abstract classes/interfaces to concrete implementations
+- **Instability**: Measure of how likely a module is to change
+- **Distance**: How far a module is from the ideal main sequence
+
+### Circular Dependency Detection
+
+tdepend automatically detects and reports circular dependencies in your codebase, helping you identify architectural violations that can lead to build issues and tight coupling.
+
+### Quality Gates for CI/CD
+
+Built-in threshold checking allows you to fail builds when architectural metrics exceed acceptable limits, preventing architectural degradation over time.
+
+## Getting Started
+
+Installation is straightforward:
+
+```bash
+# Install globally
+npm install -g tdepend
+
+# Or with your preferred package manager
+pnpm add -g tdepend
+yarn global add tdepend
+```
+
+Run your first analysis:
+
+```bash
+# Analyze your TypeScript project
+tdepend analyze
+
+# Use a custom configuration
+tdepend analyze --config my-config.json
+
+# CI mode with JSON output
+tdepend analyze --ci
+```
+
+## Configuration
+
+tdepend is fully configurable through a `tdepend.config.json` file:
+
+```json
+{
+  "rootDir": "src",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["**/*.test.ts", "**/*.spec.ts", "dist"],
+  "metrics": {
+    "enabled": ["coupling", "abstractness", "distance", "cycles"],
+    "thresholds": {
+      "distance": 0.6
+    }
+  },
+  "analysis": {
+    "target": null,
+    "value": null
+  },
+  "ci": {
+    "failOnThreshold": true,
+    "failOnCycle": false,
+    "outputFormat": "json"
+  }
+}
+```
+
+### Key Configuration Options
+
+- **Selective Analysis**: Choose which metrics to compute (`coupling`, `abstractness`, `distance`, `cycles`)
+- **Scoped Analysis**: Focus on specific modules, classes, or namespaces
+- **Flexible Thresholds**: Set custom limits for distance from main sequence
+- **CI Integration**: JSON output and configurable failure conditions
+
+## Integrating with CI/CD
+
+Add architectural checks to your continuous integration pipeline:
+
+```yaml
+# .github/workflows/architecture.yml
+name: Architecture Check
+on: [pull_request]
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm install -g tdepend
+      - run: tdepend analyze --ci
+```
+
+The `--ci` flag provides JSON output and will exit with code 1 if thresholds are exceeded, making it perfect for automated quality gates.
+
+## Advanced Features
+
+### Targeted Analysis
+
+Analyze specific parts of your codebase:
+
+```bash
+# Analyze a specific module
+tdepend analyze --target module --value UserService
+
+# Analyze a specific class
+tdepend analyze --target class --value PaymentProcessor
+```
+
+### Zero Runtime Dependencies
+
+tdepend is designed with zero runtime dependencies for analysis, ensuring it won't interfere with your project's dependency tree or introduce security vulnerabilities.
+
+### Multiple Output Formats
+
+Switch between human-readable console output for development and structured JSON for automation and tooling integration.
+
+## Conclusion
+
+Architectural health is crucial for long-term project success. tdepend brings proven dependency analysis techniques from the Java ecosystem to TypeScript, providing you with the tools needed to maintain clean, sustainable architecture as your codebase grows.
+
+Start monitoring your TypeScript architecture today and catch architectural issues before they become technical debt.
+
+---
+
+**Resources**:
+- [Documentation](/docs)
+- [GitHub Repository](https://github.com/dvmhmdsd/tdepend)
+- [MIT License](https://opensource.org/licenses/MIT)
