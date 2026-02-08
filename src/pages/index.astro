@@ -1,50 +1,58 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro';
-import Hero from '@/components/Hero.astro';
-import { InstallSnippet } from '@/components/InstallSnippet';
-import { FeatureCard } from '@/components/FeatureCard';
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Hero from "@/components/Hero.astro";
+import { InstallSnippet } from "@/components/InstallSnippet";
+import { FeatureCard } from "@/components/FeatureCard";
 
 const features = [
   {
-    icon: 'Network',
-    title: 'Dependency Analysis',
-    description: 'Analyze coupling between modules and components. Understand how your codebase is structured and identify tight coupling that may need refactoring.'
+    icon: "Network",
+    title: "Dependency Analysis",
+    description:
+      "Analyze coupling between modules and components. Understand how your codebase is structured and identify tight coupling that may need refactoring.",
   },
   {
-    icon: 'GitBranch',
-    title: 'Cycle Detection',
-    description: 'Detect circular dependencies using Tarjan\'s strongly connected components algorithm. Find and eliminate problematic cycles in your architecture.'
+    icon: "GitBranch",
+    title: "Cycle Detection",
+    description:
+      "Detect circular dependencies using Tarjan's strongly connected components algorithm. Find and eliminate problematic cycles in your architecture.",
   },
   {
-    icon: 'Activity',
-    title: 'Architectural Metrics',
-    description: 'Compute key fitness metrics including Afferent Coupling (Ca), Efferent Coupling (Ce), Instability (I), Abstractness (A), and Distance from the main sequence.'
+    icon: "Activity",
+    title: "Architectural Metrics",
+    description:
+      "Compute key fitness metrics including Afferent Coupling (Ca), Efferent Coupling (Ce), Instability (I), Abstractness (A), and Distance from the main sequence.",
   },
   {
-    icon: 'Settings',
-    title: 'Configurable Fitness Functions',
-    description: 'Define custom fitness functions and thresholds to enforce architectural rules. Set up quality gates that align with your team\'s standards.'
+    icon: "Settings",
+    title: "Configurable Fitness Functions",
+    description:
+      "Define custom fitness functions and thresholds to enforce architectural rules. Set up quality gates that align with your team's standards.",
   },
   {
-    icon: 'Code',
-    title: 'Programmatic API',
-    description: 'Use tdepend as a library in your Node.js/TypeScript projects. Access the full analysis pipeline, dependency graph, and metrics programmatically for custom integrations.'
+    icon: "Code",
+    title: "Programmatic API",
+    description:
+      "Use tdepend as a library in your Node.js/TypeScript projects. Access the full analysis pipeline, dependency graph, and metrics programmatically for custom integrations.",
   },
   {
-    icon: 'FileJson',
-    title: 'JSON Export & Serialization',
-    description: 'Export complete analysis results to versioned JSON format. Includes serialized dependency graphs, normalized cycles with unique IDs, and full metric data for external tools.'
+    icon: "FileJson",
+    title: "JSON Export & Serialization",
+    description:
+      "Export complete analysis results to versioned JSON format. Includes serialized dependency graphs, normalized cycles with unique IDs, and full metric data for external tools.",
   },
   {
-    icon: 'Package',
-    title: 'Dual CLI/Library Mode',
-    description: 'Works as both a standalone CLI tool and an importable library. Use --export flag for file output or import analyze() for programmatic usage in your scripts and workflows.'
+    icon: "Package",
+    title: "Dual CLI/Library Mode",
+    description:
+      "Works as both a standalone CLI tool and an importable library. Use --export flag for file output or import analyze() for programmatic usage in your scripts and workflows.",
   },
   {
-    icon: 'Puzzle',
-    title: 'Tool Integration',
-    description: 'Designed to work alongside ts-arch, dependency-cruiser, and custom dashboards. Export data in formats that other architectural tools can consume for comprehensive analysis.'
-  }
+    icon: "Puzzle",
+    title: "Tool Integration",
+    description:
+      "Designed to work alongside ts-arch, dependency-cruiser, and custom dashboards. Export data in formats that other architectural tools can consume for comprehensive analysis.",
+  },
 ];
 ---
 
@@ -52,52 +60,54 @@ const features = [
   <Hero />
 
   <section class="py-16 bg-muted/30">
-      <div class="mx-auto text-center space-y-4 mb-12">
-        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
-          Quick Installation
-        </h2>
-        <p class="text-lg text-muted-foreground">
-          Get started with tdepend in seconds
-        </p>
-      </div>
-      <InstallSnippet client:load />
+    <div class="mx-auto text-center space-y-4 mb-12">
+      <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
+        Quick Installation
+      </h2>
+      <p class="text-lg text-muted-foreground">
+        Get started with tdepend in seconds
+      </p>
+    </div>
+    <InstallSnippet client:load />
   </section>
 
   <section class="py-20">
-      <div class="mx-auto text-center space-y-4 mb-16">
-        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
-          Powerful Features
-        </h2>
-        <p class="text-lg text-muted-foreground">
-          Everything you need to maintain healthy architecture
-        </p>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-        {features.map((feature) => (
+    <div class="mx-auto text-center space-y-4 mb-16">
+      <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
+        Powerful Features
+      </h2>
+      <p class="text-lg text-muted-foreground">
+        Everything you need to maintain healthy architecture
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+      {
+        features.map((feature) => (
           <FeatureCard
             icon={feature.icon}
             title={feature.title}
             description={feature.description}
             client:load
           />
-        ))}
-      </div>
+        ))
+      }
+    </div>
   </section>
 
   <section class="py-20">
-    <div class="container">
-      <div class="mx-auto text-center space-y-4 mb-12">
-        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
-          Use as CLI or Library
-        </h2>
-        <p class="text-lg text-muted-foreground">
-          Choose the approach that fits your workflow
-        </p>
-      </div>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
-        <div class="rounded-lg border bg-background p-6 space-y-4">
-          <h3 class="text-xl font-semibold">CLI Usage</h3>
-          <pre class="p-4 rounded bg-muted overflow-x-auto"><code class="text-sm">
+    <div class="mx-auto text-center space-y-4 mb-12">
+      <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
+        Use as CLI or Library
+      </h2>
+      <p class="text-lg text-muted-foreground">
+        Choose the approach that fits your workflow
+      </p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+      <div class="rounded-lg border bg-background p-6 space-y-4">
+        <h3 class="text-xl font-semibold">CLI Usage</h3>
+        <pre
+          class="p-4 rounded bg-muted overflow-x-auto"><code class="text-sm">
 # Analyze your project
 tdepend analyze
 
@@ -107,10 +117,11 @@ tdepend analyze --export report.json
 # CI mode with strict checks
 tdepend analyze --ci --failOnCycle
           </code></pre>
-        </div>
-        <div class="rounded-lg border bg-background p-6 space-y-4">
-          <h3 class="text-xl font-semibold">Library Usage</h3>
-          <pre class="p-4 rounded bg-muted overflow-x-auto"><code class="text-sm">
+      </div>
+      <div class="rounded-lg border bg-background p-6 space-y-4">
+        <h3 class="text-xl font-semibold">Library Usage</h3>
+        <pre
+          class="p-4 rounded bg-muted overflow-x-auto"><code class="text-sm">
 import &#123; analyze, exportToFile &#125; from 'tdepend';
 
 const result = await analyze(&#123;
@@ -120,29 +131,34 @@ const result = await analyze(&#123;
 
 await exportToFile(result, 'analysis.json');
           </code></pre>
-        </div>
       </div>
     </div>
   </section>
 
   <section class="py-20 bg-muted/30">
-    <div class="container">
-      <div class="mx-auto max-w-3xl">
-        <div class="rounded-lg border bg-background p-8 md:p-12 space-y-6">
-          <div class="space-y-4">
-            <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Understanding Core Concepts</h2>
-          </div>
-          <div class="space-y-4">
-            <p class="text-muted-foreground leading-relaxed">
-              Learn about the metrics and algorithms that help you maintain clean architecture and identify technical debt in your TypeScript projects. Explore fitness functions, abstractness, afferent and efferent coupling, distance metrics, and Tarjan's strongly connected components algorithm.
-            </p>
-            <div class="pt-4">
-              <a href="/concepts">
-                <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-8">
-                  Explore Concepts →
-                </button>
-              </a>
-            </div>
+    <div class="mx-auto max-w-3xl">
+      <div class="rounded-lg border bg-background p-8 md:p-12 space-y-6">
+        <div class="space-y-4">
+          <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
+            Understanding Core Concepts
+          </h2>
+        </div>
+        <div class="space-y-4">
+          <p class="text-muted-foreground leading-relaxed">
+            Learn about the metrics and algorithms that help you maintain clean
+            architecture and identify technical debt in your TypeScript
+            projects. Explore fitness functions, abstractness, afferent and
+            efferent coupling, distance metrics, and Tarjan's strongly connected
+            components algorithm.
+          </p>
+          <div class="pt-4">
+            <a href="/concepts">
+              <button
+                class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-8"
+              >
+                Explore Concepts →
+              </button>
+            </a>
           </div>
         </div>
       </div>
@@ -150,25 +166,36 @@ await exportToFile(result, 'analysis.json');
   </section>
 
   <section class="py-20">
-      <div class="mx-auto text-center space-y-6">
-        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
-          Ready to improve your architecture?
-        </h2>
-        <p class="text-lg text-muted-foreground">
-          Start analyzing your TypeScript projects today and maintain clean, maintainable code.
-        </p>
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <a href="/docs">
-            <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-8">
-              Get Started
-            </button>
-          </a>
-          <a href="https://github.com/dvmhmdsd/tdepend" target="_blank" rel="noopener noreferrer">
-            <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-8">
-              View on GitHub
-            </button>
-          </a>
-        </div>
+    <div class="mx-auto text-center space-y-6">
+      <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
+        Ready to improve your architecture?
+      </h2>
+      <p class="text-lg text-muted-foreground">
+        Start analyzing your TypeScript projects today and maintain clean,
+        maintainable code.
+      </p>
+      <div
+        class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+      >
+        <a href="/docs">
+          <button
+            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-8"
+          >
+            Get Started
+          </button>
+        </a>
+        <a
+          href="https://github.com/dvmhmdsd/tdepend"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <button
+            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-8"
+          >
+            View on GitHub
+          </button>
+        </a>
       </div>
+    </div>
   </section>
 </BaseLayout>

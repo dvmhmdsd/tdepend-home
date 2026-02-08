@@ -8,7 +8,7 @@ author: Mohamed Saad
 
 Large TypeScript codebases inevitably accumulate architectural debt. As teams grow and features are added, dependencies become tangled, circular references emerge, and the overall structure becomes increasingly difficult to maintain and understand.
 
-**tdepend** is a JDepend-inspired dependency analysis tool designed specifically for the TypeScript ecosystem to help you monitor and maintain architectural health.
+**tdepend** is a JDepend-inspired dependency analysis tool designed specifically for the TypeScript ecosystem. Available as both a CLI tool and a programmatic library, it helps you monitor and maintain architectural health through automated metrics and quality gates.
 
 ## Why Architectural Analysis Matters
 
@@ -141,6 +141,87 @@ tdepend is designed with zero runtime dependencies for analysis, ensuring it won
 ### Multiple Output Formats
 
 Switch between human-readable console output for development and structured JSON for automation and tooling integration.
+
+## Programmatic API (v0.2.0+)
+
+tdepend now works as both a CLI tool and an importable library, enabling deeper integration into your development workflows:
+
+```typescript
+import { analyze, exportToFile } from 'tdepend';
+
+// Run analysis programmatically
+const result = await analyze({
+  rootDir: 'src',
+  include: ['src/**/*.ts'],
+  failOnCycle: true
+});
+
+// Access detailed metrics
+console.log(`Modules: ${result.modules.length}`);
+console.log(`Cycles: ${result.cycles.length}`);
+
+// Export complete analysis
+await exportToFile(result, 'architecture.json');
+```
+
+### Export & Integration
+
+Export comprehensive analysis results with the `--export` flag:
+
+```bash
+tdepend analyze --export architecture-snapshot.json
+```
+
+The exported JSON includes:
+- Complete dependency graph (with proper serialization)
+- All computed metrics (Ca, Ce, A, I, D)
+- Normalized cycles with unique IDs
+- Configuration and violations
+
+This makes it easy to:
+- Integrate with ts-arch or dependency-cruiser
+- Build custom dashboards and visualizations
+- Track architectural trends over time
+- Create automated refactoring tools
+
+### Integration with Architectural Tools
+
+tdepend is designed to complement existing architectural tools:
+
+**With ts-arch:**
+```typescript
+import { analyze } from 'tdepend';
+
+// Use tdepend's dependency graph for ts-arch rules
+const result = await analyze({ rootDir: 'src' });
+const dependencies = result.modules.map(m => ({
+  file: m.filePath,
+  imports: m.imports,
+}));
+
+// Apply ts-arch architectural rules using tdepend data
+```
+
+**With dependency-cruiser:**
+Export tdepend's analysis for cross-validation with dependency-cruiser's rules, ensuring comprehensive architectural governance.
+
+**With Custom Dashboards:**
+```typescript
+// Track architectural metrics over time
+const dashboard = {
+  timestamp: new Date().toISOString(),
+  avgDistance: result.metrics.reduce((sum, m) =>
+    sum + m.distance, 0) / result.metrics.length,
+  topCoupled: result.metrics
+    .sort((a, b) => (b.Ce + b.Ca) - (a.Ce + a.Ca))
+    .slice(0, 10)
+};
+
+// Send to your monitoring system
+await sendToDashboard(dashboard);
+```
+
+This approach gives you **metrics-based analysis from tdepend** combined with **rule-based enforcement from ts-arch** – the best of both worlds for maintaining clean architecture.
 
 ## Conclusion
 
