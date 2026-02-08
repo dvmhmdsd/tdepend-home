@@ -24,6 +24,26 @@ const features = [
     icon: 'Settings',
     title: 'Configurable Fitness Functions',
     description: 'Define custom fitness functions and thresholds to enforce architectural rules. Set up quality gates that align with your team\'s standards.'
+  },
+  {
+    icon: 'Code',
+    title: 'Programmatic API',
+    description: 'Use tdepend as a library in your Node.js/TypeScript projects. Access the full analysis pipeline, dependency graph, and metrics programmatically for custom integrations.'
+  },
+  {
+    icon: 'FileJson',
+    title: 'JSON Export & Serialization',
+    description: 'Export complete analysis results to versioned JSON format. Includes serialized dependency graphs, normalized cycles with unique IDs, and full metric data for external tools.'
+  },
+  {
+    icon: 'Package',
+    title: 'Dual CLI/Library Mode',
+    description: 'Works as both a standalone CLI tool and an importable library. Use --export flag for file output or import analyze() for programmatic usage in your scripts and workflows.'
+  },
+  {
+    icon: 'Puzzle',
+    title: 'Tool Integration',
+    description: 'Designed to work alongside ts-arch, dependency-cruiser, and custom dashboards. Export data in formats that other architectural tools can consume for comprehensive analysis.'
   }
 ];
 ---
@@ -62,6 +82,47 @@ const features = [
           />
         ))}
       </div>
+  </section>
+
+  <section class="py-20">
+    <div class="container">
+      <div class="mx-auto text-center space-y-4 mb-12">
+        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
+          Use as CLI or Library
+        </h2>
+        <p class="text-lg text-muted-foreground">
+          Choose the approach that fits your workflow
+        </p>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+        <div class="rounded-lg border bg-background p-6 space-y-4">
+          <h3 class="text-xl font-semibold">CLI Usage</h3>
+          <pre class="p-4 rounded bg-muted overflow-x-auto"><code class="text-sm">
+# Analyze your project
+tdepend analyze
+
+# Export results to JSON
+tdepend analyze --export report.json
+
+# CI mode with strict checks
+tdepend analyze --ci --failOnCycle
+          </code></pre>
+        </div>
+        <div class="rounded-lg border bg-background p-6 space-y-4">
+          <h3 class="text-xl font-semibold">Library Usage</h3>
+          <pre class="p-4 rounded bg-muted overflow-x-auto"><code class="text-sm">
+import &#123; analyze, exportToFile &#125; from 'tdepend';
+
+const result = await analyze(&#123;
+  rootDir: 'src',
+  failOnCycle: true
+&#125;);
+
+await exportToFile(result, 'analysis.json');
+          </code></pre>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="py-20 bg-muted/30">
