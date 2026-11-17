@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Network, GitBranch, Activity, Settings, Code, Package, FileJson, Puzzle } from 'lucide-react';
+import { Network, GitBranch, Activity, Settings, Code, Package, FileJson, ShieldCheck, History, Search } from 'lucide-react';
 
 const iconMap = {
   Network,
@@ -9,7 +9,9 @@ const iconMap = {
   Code,
   Package,
   FileJson,
-  Puzzle,
+  ShieldCheck,
+  History,
+  Search,
 };
 
 export function FeatureCard({ icon, title, description }) {

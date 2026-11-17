@@ -1,0 +1,85 @@
+---
+layout: ../../layouts/BlogPostLayout.astro
+title: tdepend, rewritten - architecture rules on a graph that matches the compiler
+description: tdepend has been rebuilt from the graph up. It now checks architecture rules against an import graph resolved by TypeScript itself, with presets, baselines, cycles and metrics on top.
+date: 2026-11-17
+author: Mohamed Saad
+---
+
+tdepend started as a JDepend-style metrics tool for TypeScript. It has now been rebuilt from the ground up, and its job has changed: it checks a codebase against **architecture rules you write down**, and fails the build when an import breaks one.
+
+This post describes what is on `main` today. The new import graph is already on npm as 0.3.1. Rules, presets, baselines and metrics ship in 0.4.0.
+
+## Why a rewrite
+
+The first version found imports by reading `import … from` lines and guessing the file. That misses a lot of real code: path aliases, re-exports, dynamic imports, `require`, and packages in a workspace. A graph with missing edges gives wrong metrics and misses cycles, and nothing tells you so.
+
+Rules are only worth enforcing if the graph under them is right. So the rewrite started there.
+
+## A graph that matches the compiler
+
+tdepend now resolves every import with TypeScript's own module resolver, using each file's nearest `tsconfig`. Aliases, package `exports`, project references and workspace packages resolve as they do for `tsc`. A workspace package is followed to its source, whether or not it has been built.
+
+I checked the result against the compiler on 15 real production repositories, NestJS backends and React and Next.js frontends. Every edge matched, in both directions.
+
+tdepend also works out which imports actually run. An import that is only used for types is erased by the compiler, so it can't be part of a runtime cycle. The rule is conservative: an import counts as loading its target unless tsc, esbuild and swc would all drop it.
+
+## Rules
+
+There are four rule types.
+
+```json
+{
+  "type": "forbidden",
+  "id": "LAYER-CONTROLLER-REPO-001",
+  "from": ["src/**/*.controller.ts"],
+  "to": ["src/**/*.repository.ts"],
+  "message": "Controllers call services, not repositories."
+}
+```
+
+- **`forbidden`**: no import from these files to those files or npm packages.
+- **`layers`**: the same idea, written as named layers.
+- **`private`**: files that only their own component may import.
+- **`no-cycles`**: no import cycles between files, components or packages.
+
+`tdepend check` evaluates them and prints each violation with its file, line and the import to fix:
+
+```text
+Errors (1):
+  src/a.controller.ts:3:19  LAYER-CONTROLLER-REPO-001  Controllers call services, not repositories.  ('./a.repository' → src/a.repository.ts)
+
+1 error, 0 warnings.
+```
+
+## Presets and components
+
+Rules talk about groups of files, so tdepend groups files into **components**: a folder pattern such as `src/*`, or a NestJS module folder. In a workspace it also knows each file's package.
+
+Presets set this up for you. `nest`, `react`, `express`, `fastify` and `node` are detected from each `package.json`, and each brings its own skips, components and recommended rules. `tdepend init` writes a starter config with the detected presets' rules switched on as warnings. You can also write your own preset.
+
+## Baselines
+
+A new rule usually finds violations that already exist. `tdepend baseline` records them, so the rule can be enforced from today: existing violations are accepted, and only new ones fail the build. Violations are matched by rule, file and target, not by line, so ordinary edits don't disturb the baseline.
+
+## Cycles and metrics
+
+Cycles are found between files, components and packages. Each one is reported with its shortest loop and the exact import behind every step, so you can see which import to cut.
+
+The JDepend metrics are still here: Ca, Ce, instability, abstractness and distance from the main sequence, for every file, component and package. Abstractness has a TypeScript-aware default: an interface counts as abstract only when something implements it, and fields-only types such as DTOs are left out.
+
+Metrics now inform and never fail a build. A rule points at one import to fix; a number doesn't.
+
+## What changed from 0.2
+
+Nothing from 0.2 carries over. The `--ci`, `--class` and `--namespace` flags are gone, and so are the `rootDir`, `ci` and `analysis` config keys. The library exports are now `analyze`, `check`, `init`, `explainFile`, `exportToFile` and `toSerializable`. Node 22.12 or later is required.
+
+## Try it
+
+```bash
+npm install --save-dev tdepend
+npx tdepend init
+npx tdepend check
+```
+
+The [docs](/docs) cover every command, rule and config key, and [Concepts](/concepts) explains the ideas. The code is on [GitHub](https://github.com/dvmhmdsd/tdepend).

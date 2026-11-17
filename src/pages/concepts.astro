@@ -1,115 +1,165 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const pre = "font-mono text-sm bg-muted p-3 rounded overflow-x-auto";
+
+const ruleExample = `{
+  "type": "forbidden",
+  "id": "LAYER-CONTROLLER-REPO-001",
+  "from": ["src/**/*.controller.ts"],
+  "to": ["src/**/*.repository.ts"],
+  "message": "Controllers call services, not repositories."
+}`;
+
+const typeOnlyExample = `import type { User } from './user';        // erased: never runs
+import { UserService } from './user.service';  // loads, if used as a value`;
+
+const cycleExample = `Component cycles (1):
+  src/orders → src/users → src/orders
+    src/orders/orders.controller.ts:2:33  '@users/repositories/users.repository' → src/users/repositories/users.repository.ts
+    src/users/users.service.ts:3:31  '../orders/orders.service' → src/orders/orders.service.ts`;
+
+const sections = [
+  { id: "rules", title: "Rules as Fitness Functions" },
+  { id: "graph", title: "The Import Graph" },
+  { id: "runtime", title: "Runtime and Type-Only Imports" },
+  { id: "components", title: "Components and Packages" },
+  { id: "coupling", title: "Coupling and Instability" },
+  { id: "abstractness", title: "Abstractness" },
+  { id: "distance", title: "Distance" },
+  { id: "cycles", title: "Cycles" },
+  { id: "baselines", title: "Baselines" },
+];
 ---
 
-<BaseLayout>
+<BaseLayout
+  title="Concepts - tdepend"
+  description="How tdepend builds its import graph, groups files into components, measures coupling, finds cycles and uses baselines"
+>
   <section class="py-20">
     <div class="mx-auto max-w-4xl">
       <div class="text-center space-y-4 mb-16">
         <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">Concepts</h1>
         <p class="text-xl text-muted-foreground">
-          Learn the core architectural concepts that power tdepend
+          The ideas behind tdepend, and what its numbers mean
         </p>
       </div>
 
       <div class="flex flex-col lg:flex-row gap-12">
         <div class="flex-1">
           <div class="space-y-12">
-            <div id="fitness-functions" class="scroll-mt-20 space-y-4">
-              <h2 class="text-3xl font-bold">Fitness Functions</h2>
+            <div id="rules" class="scroll-mt-20 space-y-4">
+              <h2 class="text-3xl font-bold">Rules as Fitness Functions</h2>
               <div class="text-muted-foreground space-y-3 leading-relaxed">
                 <p>
-                  Fitness functions are automated checks that ensure your
-                  architecture stays aligned with your intended design over
-                  time. They encode architectural rules as measurable, testable
-                  metrics that can be continuously evaluated in your development workflow.
+                  A fitness function is an automated check that keeps an
+                  architecture aligned with its intended design. In tdepend the
+                  fitness functions are <strong>rules</strong>: statements about
+                  which imports are allowed.
+                </p>
+                <pre class={pre}>{ruleExample}</pre>
+                <p>
+                  <code>tdepend check</code> evaluates every rule and exits 1
+                  when an import breaks one, so the rule holds on every pull
+                  request. There are four rule types: <code>forbidden</code>,
+                  <code>layers</code>, <code>private</code> and
+                  <code>no-cycles</code>.
                 </p>
                 <p>
-                  In tdepend, metrics like <em>distance</em>, <em
-                    >cyclic dependencies</em
-                  >, <em>abstractness</em>, and <em>coupling</em> can all be used
-                  as fitness functions inside CI to prevent architectural drift. You can enforce
-                  these through both CLI and programmatic API.
-                </p>
-                <p class="pt-2">
-                  <strong>CLI Example:</strong>
-                </p>
-                <pre
-                  class="font-mono text-sm bg-muted p-3 rounded overflow-x-auto">tdepend analyze --ci --failOnCycle</pre>
-                <p class="pt-2">
-                  <strong>Programmatic Example:</strong>
-                </p>
-                <pre
-                  class="font-mono text-sm bg-muted p-3 rounded overflow-x-auto">import &#123; analyze &#125; from 'tdepend';
-
-const result = await analyze(&#123;
-  rootDir: 'src',
-  failOnCycle: true,
-  failOnThreshold: true
-&#125;);
-
-if (!result.report.success) &#123;
-  console.error('Architecture violations!');
-  process.exit(1);
-&#125;</pre>
-                <p class="pt-2">
-                  This approach enables <strong>evolutionary architecture</strong> - your
-                  architecture evolves safely because fitness functions continuously guard
-                  against violations.
+                  A rule points at one import to fix. That is why rules can fail
+                  a build and metrics cannot: a number such as distance tells
+                  you where to look, not what to change.
                 </p>
               </div>
             </div>
 
             <div class="border-t"></div>
 
-            <div id="distance" class="scroll-mt-20 space-y-4">
-              <h2 class="text-3xl font-bold">Distance Metric</h2>
+            <div id="graph" class="scroll-mt-20 space-y-4">
+              <h2 class="text-3xl font-bold">The Import Graph</h2>
               <div class="text-muted-foreground space-y-3 leading-relaxed">
                 <p>
-                  Distance measures how far a component is from the ideal
-                  balance between abstractness and stability. This is one of the most
-                  important metrics for identifying architectural problems.
-                </p>
-                <p class="font-mono text-sm bg-muted p-3 rounded">
-                  Distance = | Abstractness + Instability - 1 |
+                  Everything rests on one graph: which file imports which.
+                  tdepend builds it with TypeScript's own module resolver, using
+                  each file's nearest <code>tsconfig</code>. Path aliases,
+                  package <code>exports</code>, project references and workspace
+                  packages resolve exactly as they do for the compiler.
                 </p>
                 <p>
-                  <strong>Interpreting Distance Values:</strong>
+                  A workspace package is followed to its source files, whether
+                  or not it has been built. Every import is also given a class,
+                  such as <code>internal</code>, <code>external</code> or
+                  <code>unresolved</code>, so nothing disappears silently.
                 </p>
+              </div>
+            </div>
+
+            <div class="border-t"></div>
+
+            <div id="runtime" class="scroll-mt-20 space-y-4">
+              <h2 class="text-3xl font-bold">Runtime and Type-Only Imports</h2>
+              <div class="text-muted-foreground space-y-3 leading-relaxed">
+                <p>
+                  Not every import runs. The compiler removes imports that are
+                  only used as types, so they can't cause a runtime cycle.
+                </p>
+                <pre class={pre}>{typeOnlyExample}</pre>
+                <p>
+                  tdepend decides this for each import, and it is conservative:
+                  an import counts as loading its target unless tsc, esbuild and
+                  swc would all drop it. So an import reported as erased is
+                  erased by every one of them.
+                  <code>tdepend explain &lt;file&gt;</code> shows the verdict
+                  and the reason for each import in a file.
+                </p>
+              </div>
+            </div>
+
+            <div class="border-t"></div>
+
+            <div id="components" class="scroll-mt-20 space-y-4">
+              <h2 class="text-3xl font-bold">Components and Packages</h2>
+              <div class="text-muted-foreground space-y-3 leading-relaxed">
+                <p>
+                  Architecture is about groups of files, not single files. A
+                  <strong>component</strong> is such a group: a folder matched
+                  by a pattern like <code>src/*</code>, or a NestJS module
+                  folder. A <strong>package</strong> is a workspace package.
+                </p>
+                <p>
+                  tdepend aggregates the file graph to both levels. Rules,
+                  metrics and cycles can then be read per file, per component
+                  or per package. Files that belong to no component are
+                  collected in a <code>(root)</code> group.
+                </p>
+              </div>
+            </div>
+
+            <div class="border-t"></div>
+
+            <div id="coupling" class="scroll-mt-20 space-y-4">
+              <h2 class="text-3xl font-bold">Coupling and Instability</h2>
+              <div class="text-muted-foreground space-y-3 leading-relaxed">
                 <ul class="space-y-2 ml-4">
-                  <li>• <strong>D = 0.0:</strong> Perfect balance (on the main sequence)</li>
-                  <li>• <strong>D &lt; 0.3:</strong> Healthy architecture</li>
-                  <li>• <strong>0.3 ≤ D ≤ 0.6:</strong> Acceptable with monitoring</li>
-                  <li>• <strong>D &gt; 0.6:</strong> Design smell - requires refactoring</li>
-                </ul>
-                <p class="pt-2">
-                  <strong>The Main Sequence Zones:</strong>
-                </p>
-                <ul class="space-y-2 ml-4">
                   <li>
-                    • <strong>Zone of Pain:</strong> Highly stable but concrete (A ≈ 0, I ≈ 0).
-                    Hard to change and tightly coupled. Example: God objects, rigid frameworks.
+                    • <strong>Afferent coupling (Ca):</strong> how many others
+                    depend on this one
                   </li>
                   <li>
-                    • <strong>Zone of Uselessness:</strong> Highly abstract but unstable (A ≈ 1, I ≈ 1).
-                    Over-engineered abstractions with no dependents. Example: Unused interfaces.
-                  </li>
-                  <li>
-                    • <strong>Main Sequence:</strong> Balanced components that are either stable
-                    and abstract (interfaces, contracts) or unstable and concrete (implementations).
+                    • <strong>Efferent coupling (Ce):</strong> how many others
+                    this one depends on
                   </li>
                 </ul>
-                <p class="pt-2">
-                  You can access distance metrics programmatically to create custom quality gates:
+                <p class="font-mono text-sm bg-muted p-3 rounded">
+                  Instability = Ce / (Ca + Ce)
                 </p>
-                <pre
-                  class="font-mono text-sm bg-muted p-3 rounded overflow-x-auto">const highDistance = result.metrics
-  .filter(m => m.distance > 0.8)
-  .map(m => (&#123;
-    file: m.filePath,
-    distance: m.distance,
-    zone: getZone(m.abstractness, m.instability)
-  &#125;));</pre>
+                <p>
+                  An instability near 0 means many things depend on the
+                  component and it depends on little, so it is costly to
+                  change. Near 1 means the opposite: it is free to change.
+                  Neighbours are counted at the level being measured, and npm
+                  packages are not counted.
+                </p>
               </div>
             </div>
 
@@ -118,109 +168,101 @@ if (!result.report.success) &#123;
             <div id="abstractness" class="scroll-mt-20 space-y-4">
               <h2 class="text-3xl font-bold">Abstractness</h2>
               <div class="text-muted-foreground space-y-3 leading-relaxed">
-                <p>
-                  Abstractness describes how many of a component's elements are
-                  abstractions (interfaces, abstract classes) versus concrete
-                  implementations.
-                </p>
                 <p class="font-mono text-sm bg-muted p-3 rounded">
-                  Abstractness = Number of abstract types / Total number of
-                  types
+                  Abstractness = abstract declarations / counted declarations
                 </p>
                 <p>
-                  High abstractness means the component defines contracts rather
-                  than implementations.
+                  In Java an interface is an abstraction. In TypeScript most
+                  interfaces only describe data. So by default tdepend counts
+                  an interface or abstract class as abstract
+                  <strong>only when something implements or extends it</strong>,
+                  and it leaves fields-only declarations such as DTOs out of
+                  the ratio altogether.
+                </p>
+                <p>
+                  Set <code>metrics.abstractness</code> to
+                  <code>"jdepend"</code> for the classic definition, where
+                  every interface, type alias and abstract class is abstract.
                 </p>
               </div>
             </div>
 
             <div class="border-t"></div>
 
-            <div id="coupling" class="scroll-mt-20 space-y-4">
-              <h2 class="text-3xl font-bold">Coupling (Afferent & Efferent)</h2>
+            <div id="distance" class="scroll-mt-20 space-y-4">
+              <h2 class="text-3xl font-bold">Distance</h2>
               <div class="text-muted-foreground space-y-3 leading-relaxed">
+                <p class="font-mono text-sm bg-muted p-3 rounded">
+                  Distance = | Abstractness + Instability − 1 |
+                </p>
                 <p>
-                  Coupling measures how much a component depends on others (Ce)
-                  and how many depend on it (Ca).
+                  The main sequence is the line where the two balance: a
+                  component is either stable and abstract, or unstable and
+                  concrete. Distance is how far a component sits from that
+                  line.
                 </p>
                 <ul class="space-y-2 ml-4">
                   <li>
-                    • <strong>Afferent Coupling (Ca):</strong> incoming dependencies
+                    • <strong>Zone of pain:</strong> stable and concrete (A
+                    and I near 0). Many depend on it, and it is hard to extend.
                   </li>
                   <li>
-                    • <strong>Efferent Coupling (Ce):</strong> outgoing dependencies
+                    • <strong>Zone of uselessness:</strong> abstract and
+                    unstable (A and I near 1). Abstractions nobody depends on.
                   </li>
                 </ul>
-                <p class="font-mono text-sm bg-muted p-3 rounded">
-                  Instability = Ce / (Ca + Ce)
-                </p>
                 <p>
-                  These values help determine how stable or volatile a module
-                  is.
+                  Distance is a signal, not a verdict.
+                  <code>metrics.thresholds.distance</code> lists the components
+                  beyond a value in the <code>analyze</code> report. It never
+                  changes the exit code.
                 </p>
               </div>
             </div>
 
             <div class="border-t"></div>
 
-            <div id="tarjan" class="scroll-mt-20 space-y-4">
-              <h2 class="text-3xl font-bold">Tarjan's SCC Algorithm</h2>
+            <div id="cycles" class="scroll-mt-20 space-y-4">
+              <h2 class="text-3xl font-bold">Cycles</h2>
               <div class="text-muted-foreground space-y-3 leading-relaxed">
                 <p>
-                  Tarjan's algorithm detects strongly connected components
-                  (SCCs) in a directed graph with O(V + E) time complexity, making it
-                  highly efficient even for large codebases.
+                  A cycle is a set of files, components or packages that all
+                  reach each other through imports. tdepend finds them with
+                  Tarjan's strongly connected components algorithm, which runs
+                  in O(V + E) time.
                 </p>
                 <p>
-                  In tdepend, SCCs correspond to <em>cyclic dependencies</em> between
-                  modules or namespaces. Any SCC with more than one node is treated
-                  as a cycle that should be reviewed or refactored.
+                  Knowing that twenty files form a cycle doesn't tell you what
+                  to fix. So each cycle is reported with its shortest loop and
+                  the exact import behind every step:
                 </p>
+                <pre class={pre}>{cycleExample}</pre>
                 <p>
-                  <strong>Why Cycles Are Problematic:</strong>
+                  By default only imports that run are considered, so a loop
+                  made of type-only imports is not a cycle. Cycles make
+                  components impossible to test or change in isolation, and can
+                  cause initialisation-order bugs.
                 </p>
-                <ul class="space-y-2 ml-4">
-                  <li>• Make testing difficult (can't test components in isolation)</li>
-                  <li>• Prevent tree-shaking and code splitting</li>
-                  <li>• Create tight coupling and fragile architecture</li>
-                  <li>• Make the codebase harder to understand and maintain</li>
-                  <li>• Can cause initialization order issues</li>
-                </ul>
-                <p class="pt-2">
-                  <strong>Cycle Detection in tdepend:</strong>
-                </p>
-                <p>
-                  tdepend automatically detects all cycles during analysis and can normalize
-                  them with unique hash-based IDs for consistent tracking across runs:
-                </p>
-                <pre
-                  class="font-mono text-sm bg-muted p-3 rounded overflow-x-auto">// Exported cycle format
-&#123;
-  "id": "a3f2b1c4d5e6f7g8",  // Unique hash
-  "nodes": [
-    "/path/to/moduleA.ts",
-    "/path/to/moduleB.ts",
-    "/path/to/moduleC.ts"
-  ],
-  "length": 3
-&#125;</pre>
-                <p class="pt-2">
-                  This enables tracking architectural debt over time and identifying
-                  cycles that persist across refactorings.
-                </p>
-                <p class="pt-2">
-                  <strong>Programmatic Access:</strong>
-                </p>
-                <pre
-                  class="font-mono text-sm bg-muted p-3 rounded overflow-x-auto">const result = await analyze(&#123; rootDir: 'src' &#125;);
+              </div>
+            </div>
 
-if (result.cycles.length > 0) &#123;
-  console.log(`Found $&#123;result.cycles.length&#125; cycles:`);
-  for (const cycle of result.cycles) &#123;
-    const files = cycle.map(p => p.split('/').pop());
-    console.log(`  $&#123;files.join(' → ')&#125;`);
-  &#125;
-&#125;</pre>
+            <div class="border-t"></div>
+
+            <div id="baselines" class="scroll-mt-20 space-y-4">
+              <h2 class="text-3xl font-bold">Baselines</h2>
+              <div class="text-muted-foreground space-y-3 leading-relaxed">
+                <p>
+                  A new rule usually finds violations that already exist. A
+                  baseline records them, with a count, so the rule can be
+                  enforced from today: existing violations are accepted, and
+                  only new ones fail the build.
+                </p>
+                <p>
+                  A violation is matched by rule, file, target and specifier,
+                  not by line number, so editing a file doesn't disturb it.
+                  <code>tdepend baseline --prune</code> shrinks the baseline as
+                  violations are fixed, and never accepts a new one.
+                </p>
               </div>
             </div>
           </div>
@@ -234,78 +276,18 @@ if (result.cycles.length > 0) &#123;
               On this page
             </div>
             <nav class="space-y-1">
-              <a
-                href="#fitness-functions"
-                class="block text-sm text-muted-foreground hover:text-primary transition-colors py-1.5 px-2 rounded hover:bg-muted"
-              >
-                Fitness Functions
-              </a>
-              <a
-                href="#distance"
-                class="block text-sm text-muted-foreground hover:text-primary transition-colors py-1.5 px-2 rounded hover:bg-muted"
-              >
-                Distance Metric
-              </a>
-              <a
-                href="#abstractness"
-                class="block text-sm text-muted-foreground hover:text-primary transition-colors py-1.5 px-2 rounded hover:bg-muted"
-              >
-                Abstractness
-              </a>
-              <a
-                href="#coupling"
-                class="block text-sm text-muted-foreground hover:text-primary transition-colors py-1.5 px-2 rounded hover:bg-muted"
-              >
-                Coupling
-              </a>
-              <a
-                href="#tarjan"
-                class="block text-sm text-muted-foreground hover:text-primary transition-colors py-1.5 px-2 rounded hover:bg-muted"
-              >
-                Tarjan SCC
-              </a>
+              {
+                sections.map((section) => (
+                  <a
+                    href={`#${section.id}`}
+                    class="block text-sm text-muted-foreground hover:text-primary transition-colors py-1.5 px-2 rounded hover:bg-muted"
+                  >
+                    {section.title}
+                  </a>
+                ))
+              }
             </nav>
           </div>
-        </div>
-      </div>
-
-      <div class="lg:hidden mt-12 pt-8 border-t">
-        <div
-          class="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4"
-        >
-          Quick links
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <a
-            href="#fitness-functions"
-            class="text-xs px-3 py-1.5 rounded-full border bg-muted/50 text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-          >
-            Fitness Functions
-          </a>
-          <a
-            href="#distance"
-            class="text-xs px-3 py-1.5 rounded-full border bg-muted/50 text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-          >
-            Distance
-          </a>
-          <a
-            href="#abstractness"
-            class="text-xs px-3 py-1.5 rounded-full border bg-muted/50 text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-          >
-            Abstractness
-          </a>
-          <a
-            href="#coupling"
-            class="text-xs px-3 py-1.5 rounded-full border bg-muted/50 text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-          >
-            Coupling
-          </a>
-          <a
-            href="#tarjan"
-            class="text-xs px-3 py-1.5 rounded-full border bg-muted/50 text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-          >
-            Tarjan SCC
-          </a>
         </div>
       </div>
     </div>

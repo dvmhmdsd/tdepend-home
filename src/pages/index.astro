@@ -6,54 +6,69 @@ import { FeatureCard } from "@/components/FeatureCard";
 
 const features = [
   {
+    icon: "ShieldCheck",
+    title: "Architecture Rules",
+    description:
+      "Forbid imports between files or layers, keep a component's internals private, ban npm packages from parts of the code, and stop import cycles. Every violation names the file, line and import to fix.",
+  },
+  {
     icon: "Network",
-    title: "Dependency Analysis",
+    title: "A Graph That Matches the Compiler",
     description:
-      "Analyze coupling between modules and components. Understand how your codebase is structured and identify tight coupling that may need refactoring.",
+      "Every import is resolved by TypeScript's own resolver: tsconfig paths, package exports, project references and workspace packages, built or not. If tsc can follow an import, so can tdepend.",
   },
   {
-    icon: "GitBranch",
-    title: "Cycle Detection",
+    icon: "Search",
+    title: "Runtime or Type-Only",
     description:
-      "Detect circular dependencies using Tarjan's strongly connected components algorithm. Find and eliminate problematic cycles in your architecture.",
-  },
-  {
-    icon: "Activity",
-    title: "Architectural Metrics",
-    description:
-      "Compute key fitness metrics including Afferent Coupling (Ca), Efferent Coupling (Ce), Instability (I), Abstractness (A), and Distance from the main sequence.",
+      "tdepend knows which imports really load their target at runtime and which ones the compiler erases, so a cycle made only of type imports isn't reported as a runtime cycle.",
   },
   {
     icon: "Settings",
-    title: "Configurable Fitness Functions",
+    title: "Presets",
     description:
-      "Define custom fitness functions and thresholds to enforce architectural rules. Set up quality gates that align with your team's standards.",
+      "NestJS, React, Express, Fastify and plain Node projects are detected per package.json. Each preset brings sensible skips, components and recommended rules, and you can write your own.",
   },
   {
-    icon: "Code",
-    title: "Programmatic API",
+    icon: "History",
+    title: "Baselines",
     description:
-      "Use tdepend as a library in your Node.js/TypeScript projects. Access the full analysis pipeline, dependency graph, and metrics programmatically for custom integrations.",
+      "Adopt a rule in a codebase that already breaks it. The baseline accepts today's violations with a count, so only new ones fail the build.",
+  },
+  {
+    icon: "GitBranch",
+    title: "Cycles With Proof",
+    description:
+      "Cycles are found between files, components and packages. Each one comes with its shortest loop and the exact import behind every step.",
+  },
+  {
+    icon: "Activity",
+    title: "Coupling Metrics",
+    description:
+      "Afferent and efferent coupling, instability, abstractness and distance from the main sequence, for every file, component and package. Metrics inform; they never fail a build.",
   },
   {
     icon: "FileJson",
-    title: "JSON Export & Serialization",
+    title: "CLI, Library and JSON",
     description:
-      "Export complete analysis results to versioned JSON format. Includes serialized dependency graphs, normalized cycles with unique IDs, and full metric data for external tools.",
-  },
-  {
-    icon: "Package",
-    title: "Dual CLI/Library Mode",
-    description:
-      "Works as both a standalone CLI tool and an importable library. Use --export flag for file output or import analyze() for programmatic usage in your scripts and workflows.",
-  },
-  {
-    icon: "Puzzle",
-    title: "Tool Integration",
-    description:
-      "Designed to work alongside ts-arch, dependency-cruiser, and custom dashboards. Export data in formats that other architectural tools can consume for comprehensive analysis.",
+      "Run it from the command line or call it from Node. The JSON output is sorted and has no timestamp, so two runs on the same code are byte-identical.",
   },
 ];
+
+const cliExample = `tdepend init        # write a starter config
+tdepend analyze     # components, metrics, cycles
+tdepend check       # evaluate the rules; exit 1 on an error
+tdepend baseline    # accept today's violations
+tdepend explain src/main.ts`;
+
+const libraryExample = `import { check } from 'tdepend';
+
+const report = await check({ root: '.' });
+
+for (const violation of report.actionable) {
+  console.log(violation);
+}
+process.exitCode = report.exitCode;`;
 ---
 
 <BaseLayout>
@@ -65,7 +80,7 @@ const features = [
         Quick Installation
       </h2>
       <p class="text-lg text-muted-foreground">
-        Get started with tdepend in seconds
+        Needs Node 22.12 or later
       </p>
     </div>
     <InstallSnippet client:load />
@@ -74,10 +89,10 @@ const features = [
   <section class="py-20">
     <div class="mx-auto text-center space-y-4 mb-16">
       <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
-        Powerful Features
+        What It Does
       </h2>
       <p class="text-lg text-muted-foreground">
-        Everything you need to maintain healthy architecture
+        Rules, and the graph that makes them trustworthy
       </p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
@@ -106,31 +121,11 @@ const features = [
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
       <div class="rounded-lg border bg-background p-6 space-y-4">
         <h3 class="text-xl font-semibold">CLI Usage</h3>
-        <pre
-          class="p-4 rounded bg-muted overflow-x-auto"><code class="text-sm">
-# Analyze your project
-tdepend analyze
-
-# Export results to JSON
-tdepend analyze --export report.json
-
-# CI mode with strict checks
-tdepend analyze --ci --failOnCycle
-          </code></pre>
+        <pre class="p-4 rounded bg-muted overflow-x-auto"><code class="text-sm">{cliExample}</code></pre>
       </div>
       <div class="rounded-lg border bg-background p-6 space-y-4">
         <h3 class="text-xl font-semibold">Library Usage</h3>
-        <pre
-          class="p-4 rounded bg-muted overflow-x-auto"><code class="text-sm">
-import &#123; analyze, exportToFile &#125; from 'tdepend';
-
-const result = await analyze(&#123;
-  rootDir: 'src',
-  failOnCycle: true
-&#125;);
-
-await exportToFile(result, 'analysis.json');
-          </code></pre>
+        <pre class="p-4 rounded bg-muted overflow-x-auto"><code class="text-sm">{libraryExample}</code></pre>
       </div>
     </div>
   </section>
@@ -145,11 +140,10 @@ await exportToFile(result, 'analysis.json');
         </div>
         <div class="space-y-4">
           <p class="text-muted-foreground leading-relaxed">
-            Learn about the metrics and algorithms that help you maintain clean
-            architecture and identify technical debt in your TypeScript
-            projects. Explore fitness functions, abstractness, afferent and
-            efferent coupling, distance metrics, and Tarjan's strongly connected
-            components algorithm.
+            Learn how tdepend groups files into components, how it tells a
+            runtime import from a type-only one, what the coupling metrics
+            mean, how cycles are found, and how a baseline lets you adopt a
+            rule gradually.
           </p>
           <div class="pt-4">
             <a href="/concepts">
@@ -168,11 +162,10 @@ await exportToFile(result, 'analysis.json');
   <section class="py-20">
     <div class="mx-auto text-center space-y-6">
       <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
-        Ready to improve your architecture?
+        Ready to write your first rule?
       </h2>
       <p class="text-lg text-muted-foreground">
-        Start analyzing your TypeScript projects today and maintain clean,
-        maintainable code.
+        Run <code>tdepend init</code> in your repository and see what it finds.
       </p>
       <div
         class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"

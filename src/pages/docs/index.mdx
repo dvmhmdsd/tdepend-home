@@ -1,368 +1,330 @@
 ---
 layout: ../../layouts/DocLayout.astro
 title: Getting Started
-description: Learn how to use tdepend to analyze your TypeScript project architecture
+description: Install tdepend, write architecture rules for a TypeScript project and check them on every build
 ---
 
 # Getting Started with tdepend
 
-Welcome to tdepend, a powerful CLI tool and library for analyzing architectural fitness in TypeScript projects. This guide will help you get started quickly.
+tdepend checks a TypeScript codebase against architecture rules you write down, such as "controllers don't import repositories" or "no import cycles between modules", and fails the build when an import breaks one.
+
+It resolves every import through TypeScript's own resolver, so its import graph matches the compiler. On that graph it groups files into components and packages, reports coupling metrics and import cycles, and evaluates rules. A baseline lets you adopt a rule in a codebase that already breaks it.
+
+These docs describe version 0.4. Version 0.3 has `analyze` and `explain` only.
 
 ## Installation
 
-Install tdepend globally for CLI usage:
+tdepend needs Node 22.12 or later.
 
 ```bash
-npm install -g tdepend
-# or
-yarn global add tdepend
-# or
-pnpm add -g tdepend
+npm install --save-dev tdepend
 ```
 
-Or install as a development dependency in your project:
+## Quick start
 
 ```bash
-npm install -D tdepend
-# or
-yarn add -D tdepend
-# or
-pnpm add -D tdepend
+npx tdepend init        # write a starter tdepend.config.json
+npx tdepend analyze     # components, metrics, cycles and how every import resolved
+npx tdepend check       # evaluate the rules; exit 1 on any error
+npx tdepend baseline    # accept today's violations, so only new ones fail
 ```
 
-## Quick Start (CLI)
+Every command takes `--root <dir>`, and every command except `init` takes `--config <path>`. tdepend looks for `tdepend.config.json` in the root only. Without one, the presets' rules still run and `check` says so. It reads the checkout as it is, so it works before a build and usually before `npm install`.
 
-Run tdepend on your project:
+## Commands
 
-```bash
-tdepend analyze
+### `tdepend analyze`
+
+Prints components with their metrics, cycles between components, and the resolution report. It exits 0, or 2 when the config, a source file or the root can't be read.
+
+| Option | Meaning |
+|---|---|
+| `-f, --format <format>` | `text` (the default) or `json` |
+| `-e, --export <path>` | Also write the full result as JSON |
+| `--strict-resolution` | Exit 2 when any import is unresolved |
+
+```text
+Components (3):
+                Ca  Ce     I     A     D
+  src/orders     2   1  0.33  0.00  0.67
+  src/users      2   2  0.50  0.00  0.50
+  (root)         1   2  0.67  0.00  0.33
+
+Component cycles (1):
+  src/orders → src/users → src/orders
+    src/orders/orders.controller.ts:2:33  '@users/repositories/users.repository' → src/users/repositories/users.repository.ts
+    src/users/users.service.ts:3:31  '../orders/orders.service' → src/orders/orders.service.ts
 ```
 
-This performs a complete analysis and outputs architectural metrics including:
+In a workspace it also prints package metrics and package cycles. Each import gets one class:
 
-- **Afferent Coupling (Ca)**: Number of modules that depend on this module
-- **Efferent Coupling (Ce)**: Number of modules this module depends on
-- **Instability (I)**: Ratio of efferent to total coupling
-- **Abstractness (A)**: Ratio of abstract types to total types
-- **Distance (D)**: Distance from the main sequence
-- **Cycles**: Circular dependencies detected using Tarjan's algorithm
+| Class | Meaning |
+|---|---|
+| `internal` | A file in the analysis set, in the same package |
+| `workspace` | A file in the analysis set, in another workspace package |
+| `external` | A package from `node_modules`, or one declared in `package.json` but not installed |
+| `builtin` | A Node built-in; `fs` and `node:fs` are the same module |
+| `excluded` | A repo file outside the analysis set, such as a test |
+| `asset` | A stylesheet, image, font, JSON or Markdown file, or anything with a `?query` |
+| `virtual` | A `virtual:` or `~icons/` module, or a `resolve.virtual` pattern |
+| `ignored` | Unresolved, but matched by `resolve.ignoreUnresolved` or gitignored |
+| `unsupported` | A form tdepend can't follow, such as `import(name)` |
+| `unresolved` | None of the above; usually a broken import |
 
-### CLI Commands & Options
+Only `internal` and `workspace` imports are edges of the graph.
 
-```bash
-# Basic analysis
-tdepend analyze
+### `tdepend explain <file>`
 
-# Use custom config file
-tdepend analyze --config custom-config.json
+Prints every import in one file: position, kind, class, target, and whether it loads its target at runtime, with the reason.
 
-# Export analysis to JSON file
-tdepend analyze --export analysis-result.json
-tdepend analyze -o analysis-result.json
-
-# CI mode with JSON output and strict exit codes
-tdepend analyze --ci
-
-# Analyze specific class
-tdepend analyze --class MyClassName
-
-# Analyze specific namespace
-tdepend analyze --namespace MyNamespace
-
-# Analyze specific module/file
-tdepend analyze src/services/user.ts
+```text
+1:8  side-effect  internal  '@/components/button' -> src/components/button.tsx  loads (retained): a side-effect import is evaluated and every compiler keeps it
 ```
 
-## Quick Start (Library)
+An import loads its target unless every compiler in `compilers` drops it.
 
-Use tdepend programmatically in your Node.js/TypeScript applications:
+### `tdepend check`
 
-```typescript
-import { analyze, exportToFile } from 'tdepend';
+Evaluates the rules and prints the violations the baseline doesn't cover.
 
-// Run analysis with options
-const result = await analyze({
-  rootDir: 'src',
-  include: ['src/**/*.ts'],
-  failOnCycle: true
+| Option | Meaning |
+|---|---|
+| `-b, --baseline <path>` | Baseline file to compare with, instead of the config's `baseline` |
+| `-f, --format <format>` | `text` (the default) or `json` |
+| `--strict-resolution` | Exit 2 when any import is unresolved |
+
+```text
+Errors (1):
+  src/a.controller.ts:3:19  LAYER-CONTROLLER-REPO-001  Controllers call services, not repositories.  ('./a.repository' → src/a.repository.ts)
+
+1 error, 0 warnings.
+```
+
+Unresolved imports are listed after the findings, because a rule can't judge an import that resolves nowhere.
+
+| Exit code | When |
+|---|---|
+| 0 | No error the baseline doesn't cover. Warnings never fail a run |
+| 1 | At least one error the baseline doesn't cover |
+| 2 | An invalid or unreadable config or baseline file, a source file that can't be read, a missing root, or an unresolved import under `--strict-resolution`. The output says which |
+
+### `tdepend baseline`
+
+Writes every current violation into the baseline file: the config's `baseline`, or `tdepend-baseline.json` next to the config. `check` reads the same file. With `--prune` it only lowers counts and removes entries nothing matches any more; it never accepts a new violation.
+
+### `tdepend init`
+
+Detects your projects and presets and writes a starter config. It refuses to overwrite an existing one unless you pass `--force`.
+
+```json
+{
+  "presets": ["auto"],
+  "exclude": [],
+  "rules": [{ "id": "nest/layers", "severity": "warn" }]
+}
+```
+
+The `rules` entries switch on the detected presets' recommended rules as warnings.
+
+## Presets
+
+A project is the root folder, every folder with a `package.json` that declares dependencies, and every workspace package. Each project gets presets from its own `package.json`. `"presets": ["auto"]` turns on `node` plus every built-in preset that matches. Listing names instead uses only those.
+
+| Preset | When | Skips | Components | Rules |
+|---|---|---|---|---|
+| `node` | always | tests, specs, `__tests__`, stories, `.d.ts`, `*.min.js`, `dist`, `build`, `coverage`, `public`, `e2e` | `src/*` | `node/no-cycles`: file cycles, warn |
+| `nest` | `@nestjs/core` | `test/**` | one per `*.module.ts` folder | `nest/layers`, off |
+| `react` | `react` without `next` | stories | `src/features/*`, then `src/*` | `react/shared-no-feature-import`, off |
+| `express` | `express` | | `src/*` | |
+| `fastify` | `fastify` | | `src/*` | |
+
+- `nest/layers`: controllers don't import repositories; repositories don't import services or controllers; DTOs don't import services or repositories.
+- `react/shared-no-feature-import`: `src/{components,lib,shared,utils}/**` doesn't import `src/features/**`.
+
+Turn an off rule on with `{ "id": "nest/layers", "severity": "warn" }` in `rules`. A preset rule runs separately in each project that has it, on that project's files.
+
+When several presets set components for one project, `nest` wins, then `react`, then `express` or `fastify`, then `node`. A `components` setting in your config applies to every project.
+
+### Your own preset
+
+```js
+// acme-preset.js
+const { definePreset } = require('tdepend/presets');
+
+module.exports = definePreset({
+  name: 'acme',
+  detect: (project) => project.dependencies.has('@nestjs/core'),
+  rules: [{ type: 'no-cycles', id: 'acme/no-module-cycles', level: 'component' }],
 });
+```
 
-console.log(`Analyzed ${result.modules.length} modules`);
-console.log(`Found ${result.cycles.length} cycles`);
+List it as `"presets": ["auto", "./acme-preset.js"]`. A preset may set `extends`, `skips`, `ignoreUnresolved`, `components`, `rules` (on), `recommended` (off) and `repoRules` (run once for the whole repository). Its paths are relative to the project.
 
-// Export results to JSON
-await exportToFile(result, 'architecture-snapshot.json');
+## Components
 
-// Access detailed metrics
-for (const metric of result.metrics) {
-  if (metric.distance > 0.8) {
-    console.log(`${metric.filePath}: D=${metric.distance.toFixed(2)}`);
+A component is a group of files that belong together, such as a feature folder or a Nest module. Rules, metrics and cycles can all work at this level.
+
+| `components.type` | A file belongs to |
+|---|---|
+| `directory` | The folder matched by the first of `patterns` that matches one of its ancestors, such as `["src/features/*", "src/*"]` |
+| `nest-module` | The nearest folder with a `*.module.ts`. AppModule keeps only its `*.module.ts` files; everything else it would claim, such as `src/main.ts` or `src/common`, belongs to no component |
+| `file` | Itself |
+
+Files that match nothing go to their project's `(root)` group. With `"coverage": { "requireAll": true, "allowUnmatched": ["src/main.ts"] }` inside `components`, each of those files is a `components/coverage` violation. In a workspace, every file also belongs to its nearest workspace package.
+
+## Rules
+
+Every rule has an `id`, a `severity` (`error` by default, `warn` or `off`) and a `message`. Paths are relative to the repository root. A path can't start with `!`; list exceptions in `exceptFrom` or `exceptTo`.
+
+### `forbidden`
+
+No import from `from` files to `to` targets.
+
+```json
+{
+  "type": "forbidden",
+  "id": "LAYER-CONTROLLER-REPO-001",
+  "from": ["src/**/*.controller.ts"],
+  "to": ["src/**/*.repository.ts"],
+  "message": "Controllers call services, not repositories."
+}
+```
+
+`to` takes `{ "files": [...] }`, `{ "modules": [...] }` or both. A `modules` pattern matches a package or Node built-in by name: `@prisma/client` matches only that module, `@prisma/client/*` only its subpaths, and `node:fs` also matches `fs`. Optional: `exceptFrom`, `exceptTo`, `kinds`, and `runtimeOnly: true` to skip imports that never run.
+
+### `layers`
+
+Forbidden imports between named layers. A file belongs to the first layer it matches.
+
+```json
+{
+  "type": "layers",
+  "id": "LAYERS-001",
+  "layers": {
+    "controllers": ["src/**/*.controller.ts"],
+    "repositories": ["src/**/*.repository.ts"]
+  },
+  "disallow": {
+    "controllers": [{ "layer": "repositories", "message": "Go through a service." }]
   }
 }
 ```
 
-### Library API
+### `private`
 
-**Main Functions:**
-- `analyze(options?)` - Run dependency analysis with custom options
-- `analyzeWithConfig(config)` - Execute analysis using a full config object
-- `exportToFile(result, filePath, options?)` - Write analysis results to JSON file
-- `exportToJson(result, options?)` - Serialize analysis to JSON string
-- `toSerializable(result)` - Transform result to serializable format
+Files only their own component may import, relative to the component's folder. Either list the private files with `paths`, or list the public entry files with `public` and everything else is private.
 
-**Core Building Blocks:**
-- `DependencyGraph` - Graph data structure for dependency relationships
-- `detectCycles(graph)` - Detect circular dependencies
-- `computeAllMetrics(graph, modules, cycles)` - Calculate architectural metrics
-- `parseProject(files)` - Parse and extract TypeScript module information
-- `scanFiles(config)` - Discover files matching glob patterns
-- `loadConfig(path?)` - Load and validate configuration
+```json
+{
+  "type": "private",
+  "id": "REPO-PRIVATE-001",
+  "paths": ["**/repositories/**"],
+  "message": "Use the owning module's service instead of its repository."
+}
+```
+
+### `no-cycles`
+
+No import cycles at `file`, `component` or `package` level.
+
+```json
+{ "type": "no-cycles", "id": "MODULE-NO-CYCLE-001", "level": "component" }
+```
+
+Each cycle is one violation, located at the first import of its shortest loop. `ignoreTypeOnly` (default `true`) leaves out imports that never run. `ignoreLazyImports: true` leaves out `import()` inside functions.
+
+## Metrics
+
+For every file, component and package:
+
+- **Ca**: how many others depend on it.
+- **Ce**: how many others it depends on.
+- **I**, instability: `Ce / (Ca + Ce)`.
+- **A**, abstractness.
+- **D**, distance from the main sequence: `|A + I − 1|`.
+
+![Abstractness against instability, with the main sequence](./_tdepend-diagram.jpeg)
+
+With `"abstractness": "implemented"` (the default), an interface or abstract class is abstract only when something implements or extends it, and fields-only declarations such as DTOs are left out of A. With `"jdepend"`, every interface, type alias and abstract class is abstract.
+
+`"thresholds": { "distance": 0.5 }` under `metrics` lists the components further than that from the main sequence. Metrics never change the exit code. See [Concepts](/concepts) for what the numbers mean.
+
+## Baselines
+
+The baseline lists accepted violations with a count:
+
+```json
+{
+  "version": 1,
+  "entries": [
+    {
+      "fingerprint": "…",
+      "kind": "import",
+      "ruleId": "NO-DB",
+      "projectId": "proj:(repo)",
+      "severity": "error",
+      "from": "src/a.ts",
+      "target": { "file": "src/db.ts" },
+      "specifier": "./db",
+      "count": 2
+    }
+  ]
+}
+```
+
+- A violation is matched by rule, project, severity, file, target and specifier, not by line.
+- With `count: 2`, two current matches are accepted and a third is reported.
+- A cycle is accepted when its members are a subset of one cycle entry's members.
+- Entries with fewer matches than their count are listed as *no longer reported*.
+
+## JSON output
+
+`analyze --format json` and `--export` write one sorted document with no timestamp: files, edges, import sites, components and packages, metrics, cycles, the effective rule instances with their severities, and the resolution report. Paths are relative to the root; lines and columns start at 1. `check --format json` prints the actionable and accepted violations, the entries no longer reported, and warnings.
+
+## Library API
+
+```ts
+import { analyze, check, init, explainFile, exportToFile, toSerializable } from 'tdepend';
+import { definePreset, builtInPresets } from 'tdepend/presets';
+
+const report = await check({ root: '.' });
+console.log(report.actionable.length);
+process.exitCode = report.exitCode;
+```
+
+`analyze` and `check` take `root`, `config` and `typeOnly`. `check` also takes `baseline` and `strictResolution`, and its report's `exitCode` is the one the CLI exits with.
 
 ## Configuration
 
-Create a `tdepend.config.json` file in your project root:
+`tdepend.config.json` in the root, or `--config <path>`. Every key is optional; these are the defaults:
 
 ```json
 {
-  "rootDir": "src",
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["**/*.test.ts", "**/*.spec.ts", "dist"],
-  "metrics": {
-    "enabled": ["coupling", "abstractness", "distance", "cycles"],
-    "thresholds": {
-      "distance": 0.6
-    }
-  },
-  "analysis": {
-    "target": null,
-    "value": null
-  },
-  "ci": {
-    "failOnThreshold": true,
-    "failOnCycle": false,
-    "outputFormat": "console"
-  }
+  "root": ".",
+  "presets": ["auto"],
+  "include": [],
+  "exclude": [],
+  "typeOnly": "usage",
+  "compilers": ["tsc", "esbuild", "swc"],
+  "resolve": { "aliases": {}, "virtual": [], "ignoreUnresolved": [] },
+  "metrics": { "abstractness": "implemented", "thresholds": { "distance": null } },
+  "rules": [],
+  "baseline": null
 }
 ```
 
-### Configuration Options
+- **`components`**: one component strategy for every project. Without it, presets decide.
+- **`include`**: root-relative globs that replace discovery. The skips still apply.
+- **`exclude`**: added to the presets' skips. `"!pattern"` switches a preset skip off, as in `"!**/public/**"`.
+- **`typeOnly`**: `usage` treats an import as type-only when its names are only used as types; `syntax` only when it is written `import type`.
+- **`compilers`**: the compilers your build uses. With `["tsc"]`, tdepend also drops `export { T } from` when every name is a type, as tsc does.
+- **`resolve.aliases`**: aliases that exist only in a bundler config, such as `{ "@/": "src/" }`. `tsconfig` `paths` need no config.
+- **`baseline`**: the baseline file, relative to the config.
 
-- **rootDir**: Root directory for analysis (default: `"src"`)
-- **include**: Glob patterns for files to include (default: `["src/**/*.ts", "src/**/*.tsx"]`)
-- **exclude**: Glob patterns for files to exclude (default: `["**/*.test.ts", "**/*.spec.ts", "dist"]`)
-- **metrics.enabled**: Metrics to compute (`"coupling"`, `"abstractness"`, `"distance"`, `"cycles"`)
-- **metrics.thresholds.distance**: Maximum allowed distance from main sequence (default: `0.6`)
-- **analysis.target**: Scope analysis to `"module"`, `"class"`, or `"namespace"` (default: `null`)
-- **analysis.value**: Value for the target scope
-- **ci.failOnThreshold**: Exit with code 1 on threshold violations (default: `true`)
-- **ci.failOnCycle**: Exit with code 1 when cycles are detected (default: `false`)
-- **ci.outputFormat**: Output format - `"console"` or `"json"` (default: `"console"`)
+Gitignored files and `node_modules`, `dist`, `build`, `out`, `coverage` and dot directories are skipped. An unknown key exits 2.
 
-## Understanding Metrics
+## Supported layouts
 
-![tdepend Architecture map (Abstractness vs Instability)](./_tdepend-diagram.jpeg)
+NestJS (CommonJS, NodeNext, monorepos with `paths`), Next.js, Vite with TanStack Router, TanStack Start, Express, Fastify, plain Node libraries, pnpm and npm workspaces (built or not), and several apps without a workspace config.
 
-### Instability (I)
-
-Instability measures how susceptible a module is to change:
-
-```
-I = Ce / (Ca + Ce)
-```
-
-- **I = 0**: Maximally stable (many dependents, few dependencies)
-- **I = 1**: Maximally unstable (few dependents, many dependencies)
-
-### Abstractness (A)
-
-Abstractness measures the ratio of abstract types to concrete types:
-
-```
-A = (Abstract Classes + Interfaces) / Total Types
-```
-
-- **A = 0**: Completely concrete
-- **A = 1**: Completely abstract
-
-### Distance from Main Sequence (D)
-
-The main sequence represents the ideal balance between stability and abstractness:
-
-```
-D = |A + I - 1|
-```
-
-- **D = 0**: Perfect balance (on the main sequence)
-- **D > 0.6**: Too far from ideal (potential design smell)
-
-Modules in the **Zone of Pain** (high stability, low abstractness) or **Zone of Uselessness** (low stability, high abstractness) should be refactored.
-
-## Detecting Cycles
-
-tdepend automatically detects circular dependencies using Tarjan's strongly connected components algorithm:
-
-```bash
-tdepend analyze
-```
-
-Cycles are included in the analysis output. To fail the build when cycles are detected:
-
-```bash
-tdepend analyze --ci
-```
-
-With `failOnCycle: true` in your config, or:
-
-```typescript
-const result = await analyze({
-  rootDir: 'src',
-  failOnCycle: true
-});
-```
-
-## Export Formats
-
-### CLI Export
-
-```bash
-# Export full analysis with all data
-tdepend analyze --export full-analysis.json
-```
-
-### Programmatic Export
-
-```typescript
-import { analyze, exportToFile, toSerializable } from 'tdepend';
-
-const result = await analyze({ rootDir: 'src' });
-
-// Export to file
-await exportToFile(result, 'analysis.json');
-
-// Or get JSON string
-const json = exportToJson(result, { pretty: true });
-
-// Or get serializable object for custom processing
-const serialized = toSerializable(result);
-```
-
-The exported JSON includes:
-- Format version and timestamp
-- Full configuration used
-- All parsed modules with imports/exports
-- Serialized dependency graph (Sets → Arrays)
-- Normalized cycles with unique IDs
-- Complete metrics for all modules
-- Analysis report with violations
-
-## Integration with Other Tools
-
-tdepend is designed to work alongside other architectural tools:
-
-### With ts-arch
-
-```typescript
-import { analyze } from 'tdepend';
-
-const result = await analyze({ rootDir: 'src' });
-
-// Use dependency graph for ts-arch rules
-const dependencies = result.modules.map(m => ({
-  file: m.filePath,
-  imports: m.imports,
-}));
-
-// Apply architectural rules...
-```
-
-### With CI/CD
-
-```typescript
-import { analyze, exportToFile } from 'tdepend';
-
-const result = await analyze({
-  rootDir: 'src',
-  failOnCycle: true,
-  failOnThreshold: true
-});
-
-await exportToFile(result, 'tdepend-report.json');
-
-if (!result.report.success) {
-  console.error('Architecture violations detected!');
-  process.exit(1);
-}
-```
-
-### With Custom Dashboards
-
-```typescript
-import { analyze } from 'tdepend';
-
-const result = await analyze({ rootDir: 'src' });
-
-const dashboard = {
-  timestamp: new Date().toISOString(),
-  summary: result.report.summary,
-  avgDistance: result.metrics.reduce((sum, m) => sum + m.distance, 0) / result.metrics.length,
-  topCoupled: result.metrics.sort((a, b) => (b.Ce + b.Ca) - (a.Ce + a.Ca)).slice(0, 10)
-};
-
-// Send to your monitoring system...
-```
-
-## Example Output
-
-### Console Output
-
-```
-📊 Summary:
-  Total imports: 51
-  Total exports: 70
-  Total classes: 1
-  Total interfaces: 15
-  Cycles detected: 0
-
-📥 Top modules by Ca (Afferent Coupling):
-  - schema.ts: Ca=7, Ce=0
-  - dependencyGraph.ts: Ca=6, Ce=2
-  - parser.ts: Ca=6, Ce=0
-
-📏 Modules by Distance from Main Sequence:
-  - index.ts: D=1.00, A=0.00, I=0.00 (Zone of Pain)
-  - schema.ts: D=1.00, A=0.00, I=0.00 (Zone of Pain)
-```
-
-### JSON Output
-
-```json
-{
-  "version": "1.0.0",
-  "timestamp": "2026-02-08T15:17:26.494Z",
-  "config": { ... },
-  "modules": [ ... ],
-  "graph": {
-    "nodes": [
-      {
-        "filePath": "/path/to/file.ts",
-        "dependencies": ["..."],
-        "dependents": ["..."]
-      }
-    ]
-  },
-  "cycles": [],
-  "metrics": [ ... ],
-  "report": {
-    "success": true,
-    "summary": { ... },
-    "violations": { ... }
-  }
-}
-```
-
-## Next Steps
-
-- Check out the [Concepts](/concepts) page to learn about architectural principles
-- Browse the [examples](https://github.com/dvmhmdsd/tdepend/tree/main/examples) for integration patterns
-- Set up quality gates in your CI/CD pipeline
-- Integrate with ts-arch or dependency-cruiser for comprehensive checks
+Vue, Svelte and Astro components and Yarn Plug'n'Play are not supported.

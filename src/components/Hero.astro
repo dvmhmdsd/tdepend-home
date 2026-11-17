@@ -8,10 +8,10 @@ import { ArrowRight, Github } from 'lucide-react';
     <div class="mx-auto max-w-4xl text-center space-y-8">
       <div class="space-y-4">
         <h1 class="text-4xl font-bold tracking-tight sm:text-6xl md:text-7xl bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-          Architectural Fitness Analysis for TypeScript
+          Architecture rules for TypeScript, checked on every build
         </h1>
         <p class="mx-auto max-w-2xl text-lg md:text-xl text-muted-foreground leading-relaxed">
-          A modern CLI tool and library for analyzing coupling, detecting cycles, and computing architecture fitness metrics like instability, abstractness, and distance from the main sequence.
+          Write down rules such as "controllers don't import repositories" or "no cycles between modules". tdepend checks them against an import graph that matches the TypeScript compiler, and fails the build when an import breaks one.
         </p>
       </div>
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -21,7 +21,7 @@ import { ArrowRight, Github } from 'lucide-react';
             <ArrowRight className="h-4 w-4" />
           </Button>
         </a>
-        <a href="https://github.com/yourusername/tdepend" target="_blank" rel="noopener noreferrer">
+        <a href="https://github.com/dvmhmdsd/tdepend" target="_blank" rel="noopener noreferrer">
           <Button size="lg" variant="outline" className="gap-2">
             <Github className="h-4 w-4" />
             GitHub
