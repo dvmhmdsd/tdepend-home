@@ -57,7 +57,7 @@ const features = [
 
 const cliExample = `tdepend init        # write a starter config
 tdepend analyze     # components, metrics, cycles
-tdepend check       # evaluate the rules; exit 1 on an error
+tdepend check       # evaluate the rules
 tdepend baseline    # accept today's violations
 tdepend explain src/main.ts`;
 
@@ -74,8 +74,8 @@ process.exitCode = report.exitCode;`;
 <BaseLayout>
   <Hero />
 
-  <section class="py-16 bg-muted/30">
-    <div class="mx-auto text-center space-y-4 mb-12">
+  <section class="py-16 px-6 bg-muted/30">
+    <div class="mx-auto text-center space-y-4 mb-12 px-6">
       <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
         Quick Installation
       </h2>
@@ -87,7 +87,7 @@ process.exitCode = report.exitCode;`;
   </section>
 
   <section class="py-20">
-    <div class="mx-auto text-center space-y-4 mb-16">
+    <div class="mx-auto text-center space-y-4 mb-16 px-6">
       <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
         What It Does
       </h2>
@@ -95,7 +95,7 @@ process.exitCode = report.exitCode;`;
         Rules, and the graph that makes them trustworthy
       </p>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto px-6">
       {
         features.map((feature) => (
           <FeatureCard
@@ -110,7 +110,7 @@ process.exitCode = report.exitCode;`;
   </section>
 
   <section class="py-20">
-    <div class="mx-auto text-center space-y-4 mb-12">
+    <div class="mx-auto text-center space-y-4 mb-12 px-6">
       <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
         Use as CLI or Library
       </h2>
@@ -118,7 +118,7 @@ process.exitCode = report.exitCode;`;
         Choose the approach that fits your workflow
       </p>
     </div>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto px-6">
       <div class="rounded-lg border bg-background p-6 space-y-4">
         <h3 class="text-xl font-semibold">CLI Usage</h3>
         <pre class="p-4 rounded bg-muted overflow-x-auto"><code class="text-sm">{cliExample}</code></pre>
@@ -131,7 +131,7 @@ process.exitCode = report.exitCode;`;
   </section>
 
   <section class="py-20 bg-muted/30">
-    <div class="mx-auto max-w-3xl">
+    <div class="mx-auto max-w-3xl px-6">
       <div class="rounded-lg border bg-background p-8 md:p-12 space-y-6">
         <div class="space-y-4">
           <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
@@ -160,7 +160,7 @@ process.exitCode = report.exitCode;`;
   </section>
 
   <section class="py-20">
-    <div class="mx-auto text-center space-y-6">
+    <div class="mx-auto text-center space-y-6 px-6">
       <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
         Ready to write your first rule?
       </h2>
