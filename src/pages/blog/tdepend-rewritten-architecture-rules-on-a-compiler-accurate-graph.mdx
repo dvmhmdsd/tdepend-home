@@ -8,7 +8,7 @@ author: Mohamed Saad
 
 tdepend started as a JDepend-style metrics tool for TypeScript. It has now been rebuilt from the ground up, and its job has changed: it checks a codebase against **architecture rules you write down**, and fails the build when an import breaks one.
 
-This post describes what is on `main` today. The new import graph is already on npm as 0.3.1. Rules, presets, baselines and metrics ship in 0.4.0.
+This post describes version 0.4.
 
 ## Why a rewrite
 
@@ -19,8 +19,6 @@ Rules are only worth enforcing if the graph under them is right. So the rewrite 
 ## A graph that matches the compiler
 
 tdepend now resolves every import with TypeScript's own module resolver, using each file's nearest `tsconfig`. Aliases, package `exports`, project references and workspace packages resolve as they do for `tsc`. A workspace package is followed to its source, whether or not it has been built.
-
-I checked the result against the compiler on 15 real production repositories, NestJS backends and React and Next.js frontends. Every edge matched, in both directions.
 
 tdepend also works out which imports actually run. An import that is only used for types is erased by the compiler, so it can't be part of a runtime cycle. The rule is conservative: an import counts as loading its target unless tsc, esbuild and swc would all drop it.
 
