@@ -8,8 +8,6 @@ author: Mohamed Saad
 
 tdepend started as a JDepend-style metrics tool for TypeScript. It has now been rebuilt from the ground up, and its job has changed: it checks a codebase against **architecture rules you write down**, and fails the build when an import breaks one.
 
-This post describes version 0.4.
-
 ## Why a rewrite
 
 The first version found imports by reading `import … from` lines and guessing the file. That misses a lot of real code: path aliases, re-exports, dynamic imports, `require`, and packages in a workspace. A graph with missing edges gives wrong metrics and misses cycles, and nothing tells you so.
