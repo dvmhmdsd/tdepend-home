@@ -67,3 +67,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  :not(pre) > code {
+    @apply rounded bg-muted px-1.5 py-0.5 font-mono font-normal text-foreground;
+    font-size: 0.875em;
+  }
+  .prose table {
+    display: block;
+    overflow-x: auto;
+  }
+  .prose :not(pre) > code {
+    font-weight: 500;
+  }
+  .prose :not(pre) > code::before,
+  .prose :not(pre) > code::after {
+    content: none;
+  }
+}
